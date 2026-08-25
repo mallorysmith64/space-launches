@@ -1,0 +1,156 @@
+/* ============================================================
+   Design tokens — "Mission Control" theme
+   A dark, telemetry-inspired palette (not the generic cream/
+   terracotta or acid-green defaults): near-black blue base,
+   booster-flame orange for primary actions, telemetry cyan for
+   data/links, and a mono face reserved for numbers & status tags
+   so the UI reads like real launch-console readouts.
+   ============================================================ */
+:root {
+  /* color */
+  --color-bg: #0a0d12;
+  --color-bg-raised: #12161f;
+  --color-bg-raised-2: #181d29;
+  --color-border: #262c3a;
+  --color-text: #e8eaef;
+  --color-text-dim: #8b93a1;
+  --color-accent: #ff6a3d;       /* booster flame orange — primary CTA */
+  --color-accent-dim: #b6431f;
+  --color-cyan: #4fd1ff;         /* telemetry cyan — links / data */
+  --color-success: #3adb76;
+  --color-fail: #ff5470;
+
+  /* type */
+  --font-display: 'Space Grotesk', 'Inter', sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* layout */
+  --nav-height: 68px;
+  --max-width: 1180px;
+  --radius: 10px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-cyan);
+}
+
+.section {
+  padding: 72px 0;
+}
+
+.section-title {
+  font-size: clamp(26px, 3.4vw, 38px);
+  font-weight: 600;
+}
+
+.section-lede {
+  color: var(--color-text-dim);
+  font-size: 16px;
+  line-height: 1.6;
+  max-width: 640px;
+  margin-top: 12px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 4px 9px;
+  border-radius: 100px;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-dim);
+}
+
+.badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.badge--success { color: var(--color-success); border-color: color-mix(in srgb, var(--color-success) 35%, var(--color-border)); }
+.badge--fail    { color: var(--color-fail); border-color: color-mix(in srgb, var(--color-fail) 35%, var(--color-border)); }
+.badge--upcoming{ color: var(--color-accent); border-color: color-mix(in srgb, var(--color-accent) 35%, var(--color-border)); }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  padding: 12px 20px;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.btn:active { transform: scale(0.97); }
+
+.btn--primary {
+  background: var(--color-accent);
+  color: #100905;
+  font-weight: 600;
+}
+.btn--primary:hover { background: #ff8158; }
+
+.btn--ghost {
+  background: transparent;
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+.btn--ghost:hover { border-color: var(--color-cyan); color: var(--color-cyan); }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}
