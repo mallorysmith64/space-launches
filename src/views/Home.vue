@@ -4,8 +4,8 @@
       <p class="eyebrow">Mission control</p>
       <h1 class="hero__title">Every SpaceX launch,<br />tracked in one feed.</h1>
       <p class="section-lede">
-        Live status, mission patches, and vehicle data for every flight —
-        past, present, and upcoming.
+        Live status, mission patches, and vehicle data for every flight — past, present, and
+        upcoming.
       </p>
       <div class="hero__actions">
         <router-link to="/launches" class="btn btn--primary">View all launches →</router-link>
@@ -14,11 +14,11 @@
     </div>
   </section>
 
-  <LaunchCarousel />
+  <MissionGallery />
 </template>
 
-<script setup>
-import LaunchCarousel from '../components/LaunchCarousel.vue'
+<script setup lang="ts">
+import MissionGallery from '../components/MissionGallery.vue'
 </script>
 
 <style scoped>
