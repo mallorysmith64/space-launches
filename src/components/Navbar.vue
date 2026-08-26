@@ -37,9 +37,12 @@ export default {
 </script>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useRoute } from 'vue-router'
 
 const open = ref(false)
+const route = useRoute()
+
 function closeMenu() {
   open.value = false
 }
@@ -47,7 +50,15 @@ function closeMenu() {
 // Nav is limited to what an informational SpaceX site actually needs:
 // the launch feed (the site's core content), the vehicles that fly the
 // missions, and a short primer for first-time visitors.
-const links = [{ to: '/about', label: 'About' }]
+const allLinks = [{ to: '/about', label: 'About' }]
+
+// Hide About link on admin screen
+const links = computed(() => {
+  if (route.path.startsWith('/admin')) {
+    return []
+  }
+  return allLinks
+})
 </script>
 
 <style scoped>
