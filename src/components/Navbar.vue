@@ -47,12 +47,7 @@ function closeMenu() {
 // Nav is limited to what an informational SpaceX site actually needs:
 // the launch feed (the site's core content), the vehicles that fly the
 // missions, and a short primer for first-time visitors.
-const links = [
-  { to: '/', label: 'Home' },
-  { to: '/launches', label: 'Launches' },
-  { to: '/rockets', label: 'Rockets' },
-  { to: '/about', label: 'About' },
-]
+const links = [{ to: '/about', label: 'About' }]
 </script>
 
 <style scoped>

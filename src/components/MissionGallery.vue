@@ -32,12 +32,12 @@ interface LL2Launch {
   name: string
   net: string
   image: { image_url: string | null } | null
+  mission: { description: string | null } | null
   rocket?: {
     configuration?: {
-      image_url?: string | null
+      name?: string | null
     }
   }
-  mission: { description: string | null } | null
 }
 
 interface LL2Response {
@@ -69,14 +69,12 @@ function formatDate(dateUtc: string): string {
 }
 
 function mapLaunch(launch: LL2Launch): Mission {
-  const photo = launch.image?.image_url
-  const rocketImage = launch.rocket?.configuration?.image_url
   return {
     id: launch.id,
     name: launch.name,
     date: formatDate(launch.net),
     description: launch.mission?.description || 'No mission description available.',
-    image: (photo || rocketImage)!,
+    image: launch.image!.image_url!,
   }
 }
 
@@ -112,18 +110,37 @@ async function loadMissions(): Promise<void> {
   }
 
   try {
+    // Over-fetch: SpaceX flies Falcon 9 far more than anything else, so to find enough
+    // rocket variety (Falcon Heavy, Starship, etc.) we have to look through many past
+    // launches. Falcon 9 is capped to just one appearance below.
     const params = new URLSearchParams({
       lsp__name: 'SpaceX',
       mode: 'detailed',
-      limit: String(MISSION_COUNT),
+      limit: '100',
       ordering: '-net',
     })
     const res = await fetch(`https://ll.thespacedevs.com/2.3.0/launches/previous/?${params}`)
     if (!res.ok) throw new Error(`Launch Library API responded ${res.status}`)
     const data: LL2Response = await res.json()
 
+    const seenImages = new Set<string>()
+    const rocketCounts = new Map<string, number>()
+    const MAX_PER_ROCKET = 1
+
     const withImages = data.results
-      .filter((launch) => launch.image?.image_url || launch.rocket?.configuration?.image_url)
+      .filter((launch): launch is LL2Launch & { image: { image_url: string } } => {
+        const url = launch.image?.image_url
+        if (!url || seenImages.has(url)) return false
+
+        const rocketName = launch.rocket?.configuration?.name || 'Unknown'
+        const count = rocketCounts.get(rocketName) || 0
+        if (count >= MAX_PER_ROCKET) return false
+
+        seenImages.add(url)
+        rocketCounts.set(rocketName, count + 1)
+        return true
+      })
+      .slice(0, MISSION_COUNT)
       .map(mapLaunch)
 
     missions.value = withImages
