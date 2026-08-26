@@ -14,9 +14,9 @@
   --color-border: #262c3a;
   --color-text: #e8eaef;
   --color-text-dim: #8b93a1;
-  --color-accent: #ff6a3d;       /* booster flame orange — primary CTA */
+  --color-accent: #ff6a3d; /* booster flame orange — primary CTA */
   --color-accent-dim: #b6431f;
-  --color-cyan: #4fd1ff;         /* telemetry cyan — links / data */
+  --color-cyan: #4fd1ff; /* telemetry cyan — links / data */
   --color-success: #3adb76;
   --color-fail: #ff5470;
 
@@ -57,7 +57,9 @@ img {
   display: block;
 }
 
-h1, h2, h3 {
+h1,
+h2,
+h3 {
   font-family: var(--font-display);
   margin: 0;
   letter-spacing: -0.01em;
@@ -106,6 +108,9 @@ h1, h2, h3 {
   border-radius: 100px;
   border: 1px solid var(--color-border);
   color: var(--color-text-dim);
+  /* Subtle background for better readability over space background */
+  background: rgba(18, 22, 31, 0.4);
+  backdrop-filter: blur(4px);
 }
 
 .badge::before {
@@ -116,9 +121,18 @@ h1, h2, h3 {
   background: currentColor;
 }
 
-.badge--success { color: var(--color-success); border-color: color-mix(in srgb, var(--color-success) 35%, var(--color-border)); }
-.badge--fail    { color: var(--color-fail); border-color: color-mix(in srgb, var(--color-fail) 35%, var(--color-border)); }
-.badge--upcoming{ color: var(--color-accent); border-color: color-mix(in srgb, var(--color-accent) 35%, var(--color-border)); }
+.badge--success {
+  color: var(--color-success);
+  border-color: color-mix(in srgb, var(--color-success) 35%, var(--color-border));
+}
+.badge--fail {
+  color: var(--color-fail);
+  border-color: color-mix(in srgb, var(--color-fail) 35%, var(--color-border));
+}
+.badge--upcoming {
+  color: var(--color-accent);
+  border-color: color-mix(in srgb, var(--color-accent) 35%, var(--color-border));
+}
 
 .btn {
   display: inline-flex;
@@ -131,26 +145,46 @@ h1, h2, h3 {
   border-radius: var(--radius);
   border: 1px solid transparent;
   cursor: pointer;
-  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    background 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
-.btn:active { transform: scale(0.97); }
+.btn:active {
+  transform: scale(0.97);
+}
 
 .btn--primary {
   background: var(--color-accent);
   color: #100905;
   font-weight: 600;
+  box-shadow: 0 0 20px rgba(255, 106, 61, 0.25);
 }
-.btn--primary:hover { background: #ff8158; }
+.btn--primary:hover {
+  background: #ff8158;
+  box-shadow: 0 0 30px rgba(255, 106, 61, 0.4);
+}
 
 .btn--ghost {
-  background: transparent;
-  border-color: var(--color-border);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(79, 209, 255, 0.3);
   color: var(--color-text);
+  backdrop-filter: blur(4px);
 }
-.btn--ghost:hover { border-color: var(--color-cyan); color: var(--color-cyan); }
+.btn--ghost:hover {
+  border-color: var(--color-cyan);
+  color: var(--color-cyan);
+  background: rgba(79, 209, 255, 0.1);
+}
 
 @media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  html {
+    scroll-behavior: auto;
+  }
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
 }
