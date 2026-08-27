@@ -7,6 +7,11 @@
 
 <script setup lang="ts">
 import AppNavbar from './components/Navbar.vue'
+
+// const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+
+// Then use it:
+// fetch(`${API_URL}/your-endpoint`)
 </script>
 
 <style>

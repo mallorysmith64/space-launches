@@ -1,9 +1,13 @@
 import os
 from flask import Flask, jsonify, request, send_from_directory, render_template_string, session, redirect, url_for
+from flask_cors import CORS
 from functools import wraps
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'secret-key')  # Change this in production!
+
+# Enable CORS for requests from Vue frontend
+CORS(app, supports_credentials=True, origins=['http://localhost:3000'])
 
 # Define the directory where your images are stored
 IMAGES_DIR = os.path.join(app.root_path, 'images')
@@ -43,10 +47,20 @@ def admin_login():
         # Simple authentication (replace with real authentication in production)
         if username == 'admin' and password == 'password':
             session['admin_logged_in'] = True
-            return redirect(url_for('admin_dashboard'))
+            
+            # For fetch requests, return JSON; for form submissions, redirect
+            if request.headers.get('Content-Type') == 'application/x-www-form-urlencoded':
+                return jsonify({'status': 'success', 'message': 'Login successful'})
+            else:
+                return redirect(url_for('admin_dashboard'))
         else:
             error = 'Invalid username or password'
-            return render_template_string(LOGIN_TEMPLATE, error=error)
+            
+            # For fetch requests, return JSON; for form submissions, return HTML
+            if request.headers.get('Content-Type') == 'application/x-www-form-urlencoded':
+                return jsonify({'status': 'error', 'message': 'Invalid username or password'}), 401
+            else:
+                return render_template_string(LOGIN_TEMPLATE, error=error), 401
     
     return render_template_string(LOGIN_TEMPLATE)
 
@@ -65,4 +79,4 @@ def admin_logout():
     return redirect(url_for('admin_login'))
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5000)
