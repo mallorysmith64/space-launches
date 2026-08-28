@@ -6,12 +6,23 @@
         <span class="nav__brand-text">SPACEX <span class="dim">// MISSIONS</span></span>
       </router-link>
 
-      <button class="nav__toggle" @click="open = !open" :aria-expanded="open" aria-label="Toggle navigation">
+      <button
+        class="nav__toggle"
+        @click="open = !open"
+        :aria-expanded="open"
+        aria-label="Toggle navigation"
+      >
         <span :class="{ 'is-open': open }"></span>
       </button>
 
       <nav class="nav__links" :class="{ 'is-open': open }">
-        <router-link v-for="link in links" :key="link.to" :to="link.to" class="nav__link" @click="closeMenu">
+        <router-link
+          v-for="link in links"
+          :key="link.to"
+          :to="link.to"
+          class="nav__link"
+          @click="closeMenu"
+        >
           {{ link.label }}
         </router-link>
       </nav>
@@ -19,10 +30,19 @@
   </header>
 </template>
 
-<script setup>
-import { ref } from 'vue'
+<script lang="ts">
+export default {
+  name: 'AppNavbar',
+}
+</script>
+
+<script setup lang="ts">
+import { ref, computed } from 'vue'
+import { useRoute } from 'vue-router'
 
 const open = ref(false)
+const route = useRoute()
+
 function closeMenu() {
   open.value = false
 }
@@ -30,12 +50,15 @@ function closeMenu() {
 // Nav is limited to what an informational SpaceX site actually needs:
 // the launch feed (the site's core content), the vehicles that fly the
 // missions, and a short primer for first-time visitors.
-const links = [
-  { to: '/', label: 'Home' },
-  { to: '/launches', label: 'Launches' },
-  { to: '/rockets', label: 'Rockets' },
-  { to: '/about', label: 'About' }
-]
+const allLinks = [{ to: '/about', label: 'About' }]
+
+// Hide About link on admin screen
+const links = computed(() => {
+  if (route.path.startsWith('/admin')) {
+    return []
+  }
+  return allLinks
+})
 </script>
 
 <style scoped>
@@ -46,9 +69,12 @@ const links = [
   right: 0;
   height: var(--nav-height);
   z-index: 100;
-  background: rgba(10, 13, 18, 0.82);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--color-border);
+  /* Transparent background with subtle blur for glass effect */
+  background: rgba(10, 13, 18, 0.25);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  /* Very subtle border that blends with content */
+  border-bottom: 1px solid rgba(79, 209, 255, 0.1);
 }
 
 .nav__inner {
@@ -62,6 +88,11 @@ const links = [
   display: flex;
   align-items: center;
   gap: 10px;
+  transition: filter 0.3s ease;
+}
+
+.nav__brand:hover {
+  filter: drop-shadow(0 0 12px rgba(255, 106, 61, 0.4));
 }
 
 .nav__brand-mark {
@@ -75,6 +106,12 @@ const links = [
   font-family: var(--font-mono);
   font-weight: 700;
   font-size: 12px;
+  box-shadow: 0 0 16px rgba(255, 106, 61, 0.3);
+  transition: box-shadow 0.3s ease;
+}
+
+.nav__brand-mark:hover {
+  box-shadow: 0 0 24px rgba(255, 106, 61, 0.6);
 }
 
 .nav__brand-text {
@@ -82,8 +119,12 @@ const links = [
   font-size: 13px;
   letter-spacing: 0.08em;
   color: var(--color-text);
+  text-shadow: 0 0 20px rgba(79, 209, 255, 0.15);
 }
-.nav__brand-text .dim { color: var(--color-text-dim); }
+
+.nav__brand-text .dim {
+  color: var(--color-text-dim);
+}
 
 .nav__links {
   display: flex;
@@ -99,27 +140,40 @@ const links = [
   color: var(--color-text-dim);
   padding: 6px 2px;
   border-bottom: 2px solid transparent;
-  transition: color 0.15s ease, border-color 0.15s ease;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    text-shadow 0.15s ease;
 }
 
 .nav__link:hover {
   color: var(--color-text);
+  text-shadow: 0 0 12px rgba(79, 209, 255, 0.3);
 }
 
 .nav__link.router-link-exact-active {
   color: var(--color-accent);
   border-bottom-color: var(--color-accent);
+  text-shadow: 0 0 12px rgba(255, 106, 61, 0.3);
 }
 
 .nav__toggle {
   display: none;
   width: 34px;
   height: 34px;
-  border: 1px solid var(--color-border);
+  border: 1px solid rgba(79, 209, 255, 0.2);
   border-radius: 8px;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.05);
   cursor: pointer;
   position: relative;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.nav__toggle:hover {
+  border-color: var(--color-cyan);
+  background: rgba(79, 209, 255, 0.08);
 }
 
 .nav__toggle span,
@@ -131,17 +185,39 @@ const links = [
   right: 8px;
   height: 2px;
   background: var(--color-text);
-  transition: transform 0.2s ease, opacity 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease;
 }
-.nav__toggle span { top: 16px; }
-.nav__toggle span::before { top: -6px; }
-.nav__toggle span::after { top: 6px; }
-.nav__toggle span.is-open { background: transparent; }
-.nav__toggle span.is-open::before { transform: translateY(6px) rotate(45deg); }
-.nav__toggle span.is-open::after { transform: translateY(-6px) rotate(-45deg); }
+
+.nav__toggle span {
+  top: 16px;
+}
+
+.nav__toggle span::before {
+  top: -6px;
+}
+
+.nav__toggle span::after {
+  top: 6px;
+}
+
+.nav__toggle span.is-open {
+  background: transparent;
+}
+
+.nav__toggle span.is-open::before {
+  transform: translateY(6px) rotate(45deg);
+}
+
+.nav__toggle span.is-open::after {
+  transform: translateY(-6px) rotate(-45deg);
+}
 
 @media (max-width: 720px) {
-  .nav__toggle { display: block; }
+  .nav__toggle {
+    display: block;
+  }
 
   .nav__links {
     position: absolute;
@@ -151,13 +227,22 @@ const links = [
     flex-direction: column;
     align-items: flex-start;
     gap: 0;
-    background: var(--color-bg-raised);
-    border-bottom: 1px solid var(--color-border);
+    background: rgba(18, 22, 31, 0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(79, 209, 255, 0.1);
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.2s ease;
   }
-  .nav__links.is-open { max-height: 260px; }
-  .nav__link { width: 100%; padding: 14px 24px; border-bottom: 1px solid var(--color-border); }
+
+  .nav__links.is-open {
+    max-height: 260px;
+  }
+
+  .nav__link {
+    width: 100%;
+    padding: 14px 24px;
+    border-bottom: 1px solid rgba(79, 209, 255, 0.05);
+  }
 }
 </style>
