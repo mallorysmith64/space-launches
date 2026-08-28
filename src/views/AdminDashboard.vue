@@ -2,7 +2,9 @@
   <div class="admin-dashboard">
     <div class="dashboard-header">
       <h1 class="dashboard-title">Admin Dashboard</h1>
-      <button @click="handleLogout" class="logout-button">Logout</button>
+      <button @click="handleLogout" class="logout-button" :disabled="isLoading">
+        {{ isLoading ? 'Logging out...' : 'Logout' }}
+      </button>
     </div>
 
     <div class="dashboard-content">
@@ -13,9 +15,35 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+const isLoading = ref(false)
+
 const handleLogout = async () => {
-  // Navigate to Flask logout endpoint
-  window.location.href = 'http://localhost:5000/admin/logout'
+  isLoading.value = true
+  try {
+    const response = await fetch('/admin/logout', {
+      method: 'GET',
+      credentials: 'include',
+    })
+
+    if (response.ok) {
+      // Logout successful - redirect to login
+      await router.push('/login')
+    } else {
+      console.error('Logout failed')
+      // Force redirect even if logout fails
+      await router.push('/login')
+    }
+  } catch (err) {
+    console.error('Logout error:', err)
+    // Force redirect even if there's an error
+    await router.push('/login')
+  } finally {
+    isLoading.value = false
+  }
 }
 </script>
 
@@ -63,13 +91,18 @@ const handleLogout = async () => {
   box-shadow: 0 0 16px rgba(255, 106, 61, 0.3);
 }
 
-.logout-button:hover {
+.logout-button:hover:not(:disabled) {
   box-shadow: 0 0 24px rgba(255, 106, 61, 0.5);
   transform: translateY(-2px);
 }
 
-.logout-button:active {
+.logout-button:active:not(:disabled) {
   transform: translateY(0);
+}
+
+.logout-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .dashboard-content {

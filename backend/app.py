@@ -1,82 +1,98 @@
 import os
-from flask import Flask, jsonify, request, send_from_directory, render_template_string, session, redirect, url_for
+from flask import Flask, jsonify, request, session, redirect, url_for
 from flask_cors import CORS
 from functools import wraps
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'secret-key')  # Change this in production!
+app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
 
-# Enable CORS for requests from Vue frontend
-CORS(app, supports_credentials=True, origins=['http://localhost:3000'])
+# Enable CORS with proper configuration for Vue dev server
+CORS(
+    app,
+    resources={r"/admin*": {"origins": ["http://localhost:5000", "http://localhost:3000", "http://localhost:5173"]}},
+    supports_credentials=True,
+    allow_headers=['Content-Type', 'Authorization'],
+    methods=['GET', 'POST', 'OPTIONS']
+)
 
-# Define the directory where your images are stored
-IMAGES_DIR = os.path.join(app.root_path, 'images')
-
-# Define templates to fix undefined variables
-LOGIN_TEMPLATE = """
-<!doctype html>
-<title>Admin Login</title>
-<h2>Admin Login</h2>
-{% if error %}<p style="color: red;">{{ error }}</p>{% endif %}
-<form method="post">
-    <p><input type="text" name="username" placeholder="Username" required></p>
-    <p><input type="password" name="password" placeholder="Password" required></p>
-    <p><input type="submit" value="Login"></p>
-</form>
-"""
-
-DASHBOARD_TEMPLATE = """
-<!doctype html>
-<title>Admin Dashboard</title>
-<h2>Welcome to the Admin Dashboard</h2>
-<p>You are logged in successfully.</p>
-<p><a href="{{ url_for('admin_logout') }}">Logout</a></p>
-"""
+# Authentication decorator
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('admin_logged_in'):
+            return jsonify({'status': 'error', 'message': 'Unauthorized'}), 401
+        return f(*args, **kwargs)
+    return decorated_function
 
 @app.route("/")
 def hello_world():
-    return "<p>Hello, World!</p>"
+    return jsonify({'message': 'Hello, World!'})
 
 @app.route("/admin", methods=["GET", "POST"])
 def admin_login():
-    """Admin login page"""
+    """Admin login endpoint"""
     if request.method == "POST":
-        username = request.form.get('username')
-        password = request.form.get('password')
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
         
-        # Simple authentication (replace with real authentication in production)
+        # Simple authentication (REPLACE with real authentication in production)
         if username == 'admin' and password == 'password':
             session['admin_logged_in'] = True
+            session.permanent = True
             
-            # For fetch requests, return JSON; for form submissions, redirect
-            if request.headers.get('Content-Type') == 'application/x-www-form-urlencoded':
-                return jsonify({'status': 'success', 'message': 'Login successful'})
-            else:
-                return redirect(url_for('admin_dashboard'))
+            # Always return JSON for consistency with fetch requests
+            return jsonify({
+                'status': 'success',
+                'message': 'Login successful',
+                'redirect': '/admin/dashboard'
+            }), 200
         else:
-            error = 'Invalid username or password'
-            
-            # For fetch requests, return JSON; for form submissions, return HTML
-            if request.headers.get('Content-Type') == 'application/x-www-form-urlencoded':
-                return jsonify({'status': 'error', 'message': 'Invalid username or password'}), 401
-            else:
-                return render_template_string(LOGIN_TEMPLATE, error=error), 401
+            return jsonify({
+                'status': 'error',
+                'message': 'Invalid username or password'
+            }), 401
     
-    return render_template_string(LOGIN_TEMPLATE)
+    # GET request - just return success if already logged in
+    if session.get('admin_logged_in'):
+        return jsonify({'status': 'success', 'message': 'Already logged in'}), 200
+    
+    return jsonify({'status': 'error', 'message': 'Not logged in'}), 401
 
-@app.route("/admin/dashboard")
+@app.route("/admin/dashboard", methods=["GET"])
+@login_required
 def admin_dashboard():
     """Admin dashboard (protected route)"""
-    if not session.get('admin_logged_in'):
-        return redirect(url_for('admin_login'))
-    
-    return render_template_string(DASHBOARD_TEMPLATE)
+    return jsonify({
+        'status': 'success',
+        'message': 'Welcome to the Admin Dashboard',
+        'user': 'admin'
+    }), 200
 
-@app.route("/admin/logout")
+@app.route("/admin/logout", methods=["GET"])
 def admin_logout():
-    """Logout"""
+    """Logout endpoint"""
     session.pop('admin_logged_in', None)
-    return redirect(url_for('admin_login'))
+    return jsonify({
+        'status': 'success',
+        'message': 'Logged out successfully'
+    }), 200
+
+@app.route("/admin/status", methods=["GET"])
+def admin_status():
+    """Check authentication status"""
+    if session.get('admin_logged_in'):
+        return jsonify({'status': 'authenticated', 'message': 'User is logged in'}), 200
+    return jsonify({'status': 'unauthenticated', 'message': 'User is not logged in'}), 401
+
+# Error handlers
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({'status': 'error', 'message': 'Endpoint not found'}), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    return jsonify({'status': 'error', 'message': 'Internal server error'}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    # Only use debug mode in development
+    app.run(debug=True, port=5000, host='127.0.0.1')

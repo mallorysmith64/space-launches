@@ -1,3 +1,7 @@
+<script setup lang="ts">
+import MissionGallery from '../components/MissionGallery.vue'
+</script>
+
 <template>
   <section class="hero">
     <div class="container hero__inner">
@@ -7,19 +11,11 @@
         Live status, mission patches, and vehicle data for every flight — past, present, and
         upcoming.
       </p>
-      <div class="hero__actions">
-        <router-link to="/launches" class="btn btn--primary">View all launches →</router-link>
-        <router-link to="/rockets" class="btn btn--ghost">Browse rockets</router-link>
-      </div>
     </div>
   </section>
 
   <MissionGallery />
 </template>
-
-<script setup lang="ts">
-import MissionGallery from '../components/MissionGallery.vue'
-</script>
 
 <style scoped>
 .hero {

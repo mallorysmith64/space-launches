@@ -3,12 +3,12 @@
     <div class="login-container">
       <h1 class="login-title">Admin Login</h1>
 
-      <form action="/admin" method="POST" class="login-form">
+      <form @submit.prevent="handleLogin" class="login-form">
         <div class="form-group">
           <label for="username" class="form-label">Username</label>
           <input
             id="username"
-            name="username"
+            v-model="username"
             type="text"
             class="form-input"
             placeholder="Enter your username"
@@ -20,7 +20,7 @@
           <label for="password" class="form-label">Password</label>
           <input
             id="password"
-            name="password"
+            v-model="password"
             type="password"
             class="form-input"
             placeholder="Enter your password"
@@ -28,8 +28,12 @@
           />
         </div>
 
-        <button type="submit" class="login-button">Login</button>
+        <button type="submit" class="login-button" :disabled="isLoading">
+          {{ isLoading ? 'Logging in...' : 'Login' }}
+        </button>
       </form>
+
+      <p v-if="error" class="error-message">{{ error }}</p>
 
       <div class="login-footer">
         <router-link to="/" class="back-link">Back to Home</router-link>
@@ -38,9 +42,45 @@
   </div>
 </template>
 
-<script lang="ts">
-export default {
-  name: 'AdminLogin',
+<script setup lang="ts">
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+const username = ref('')
+const password = ref('')
+const error = ref('')
+const isLoading = ref(false)
+
+const handleLogin = async () => {
+  error.value = ''
+  isLoading.value = true
+
+  try {
+    const formData = new FormData()
+    formData.append('username', username.value)
+    formData.append('password', password.value)
+
+    // Post to Flask backend via Vite proxy
+    const response = await fetch('/admin', {
+      method: 'POST',
+      body: formData,
+      credentials: 'include', // Include cookies for session
+    })
+
+    if (response.ok) {
+      // Login successful - redirect to dashboard
+      await router.push('/admin/dashboard')
+    } else {
+      const data = await response.json()
+      error.value = data.message || 'Invalid username or password'
+    }
+  } catch (err) {
+    error.value = 'Failed to connect to server. Make sure Flask is running on localhost:5000'
+    console.error('Login error:', err)
+  } finally {
+    isLoading.value = false
+  }
 }
 </script>
 
@@ -141,13 +181,30 @@ export default {
   box-shadow: 0 0 16px rgba(255, 106, 61, 0.3);
 }
 
-.login-button:hover {
+.login-button:hover:not(:disabled) {
   box-shadow: 0 0 24px rgba(255, 106, 61, 0.5);
   transform: translateY(-2px);
 }
 
-.login-button:active {
+.login-button:active:not(:disabled) {
   transform: translateY(0);
+}
+
+.login-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error-message {
+  padding: 12px 16px;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  border-radius: 6px;
+  text-align: center;
 }
 
 .login-footer {

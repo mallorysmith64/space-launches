@@ -58,7 +58,8 @@ const handleLogin = async () => {
     formData.append('password', password.value)
 
     // Post to Flask backend at localhost:5000
-    const response = await fetch('http://localhost:5000/admin', {
+    const response = await fetch('/admin', {
+      // Use relative path
       method: 'POST',
       body: formData,
       credentials: 'include',
