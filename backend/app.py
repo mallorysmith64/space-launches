@@ -4,12 +4,12 @@ from flask_cors import CORS
 from functools import wraps
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
+app.secret_key = os.environ.get('SECRET_KEY', '1331928c7a8e12abf1899118ad6e5fd885a27f9c66439bbb030a2792ee4900d3')
 
 # Enable CORS with proper configuration for Vue dev server
 CORS(
     app,
-    resources={r"/admin*": {"origins": ["http://localhost:5000", "http://localhost:3000", "http://localhost:5173"]}},
+    resources={r"/api/admin*": {"origins": ["http://localhost:5173", "http://localhost:5000", "http://localhost:3000"]}},
     supports_credentials=True,
     allow_headers=['Content-Type', 'Authorization'],
     methods=['GET', 'POST', 'OPTIONS']
@@ -28,12 +28,19 @@ def login_required(f):
 def hello_world():
     return jsonify({'message': 'Hello, World!'})
 
-@app.route("/admin", methods=["GET", "POST"])
+@app.route("/api/admin/login", methods=["GET", "POST"])
 def admin_login():
     """Admin login endpoint"""
     if request.method == "POST":
-        username = request.form.get('username', '').strip()
-        password = request.form.get('password', '').strip()
+        # Handle both JSON and form-encoded requests
+        if request.is_json:
+            data = request.get_json()
+            username = data.get('username', '').strip()
+            password = data.get('password', '').strip()
+        else:
+            # Fallback to form data
+            username = request.form.get('username', '').strip()
+            password = request.form.get('password', '').strip()
         
         # Simple authentication (REPLACE with real authentication in production)
         if username == 'admin' and password == 'password':
@@ -58,7 +65,7 @@ def admin_login():
     
     return jsonify({'status': 'error', 'message': 'Not logged in'}), 401
 
-@app.route("/admin/dashboard", methods=["GET"])
+@app.route("/api/admin/dashboard", methods=["GET"])
 @login_required
 def admin_dashboard():
     """Admin dashboard (protected route)"""
@@ -68,7 +75,7 @@ def admin_dashboard():
         'user': 'admin'
     }), 200
 
-@app.route("/admin/logout", methods=["GET"])
+@app.route("/api/admin/logout", methods=["GET"])
 def admin_logout():
     """Logout endpoint"""
     session.pop('admin_logged_in', None)
@@ -77,7 +84,7 @@ def admin_logout():
         'message': 'Logged out successfully'
     }), 200
 
-@app.route("/admin/status", methods=["GET"])
+@app.route("/api/admin/status", methods=["GET"])
 def admin_status():
     """Check authentication status"""
     if session.get('admin_logged_in'):
