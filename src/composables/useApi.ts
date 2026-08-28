@@ -4,9 +4,9 @@ import { ref } from 'vue'
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
 export function useApi() {
-  const data = ref(null)
+  const data = ref<unknown>(null)
   const loading = ref(false)
-  const error = ref(null)
+  const error = ref<string | null>(null)
 
   const fetchApi = async (endpoint: string, options: RequestInit = {}) => {
     loading.value = true
