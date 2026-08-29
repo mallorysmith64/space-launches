@@ -24,7 +24,7 @@ const isLoading = ref(false)
 const handleLogout = async () => {
   isLoading.value = true
   try {
-    const response = await fetch('/admin/logout', {
+    const response = await fetch('/api/admin/logout', {
       method: 'GET',
       credentials: 'include',
     })
