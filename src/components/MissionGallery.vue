@@ -7,14 +7,30 @@
       patches where they don't. Each card features a different SpaceX rocket.
     </p>
 
-    <div v-if="loading" class="mission-gallery__status">Loading missions…</div>
+    <!-- Show loading state only if no data available at all -->
+    <div v-if="missions.length === 0 && loading" class="mission-gallery__status">
+      Loading missions…
+    </div>
     <div v-else-if="error && missions.length === 0" class="mission-gallery__status">
       Couldn't load mission images right now. Try refreshing the page.
     </div>
+
+    <!-- Show missions grid (from cache/fallback) -->
     <div v-else class="mission-gallery__grid">
-      <article v-for="mission in missions" :key="mission.id" class="mission-card">
+      <article
+        v-for="mission in missions"
+        :key="mission.id"
+        class="mission-card"
+        :class="{ 'mission-card--updating': updatingMissionIds.has(mission.id) }"
+      >
         <div class="mission-card__image-wrapper">
-          <img :src="mission.image" :alt="mission.name" class="mission-card__image" loading="lazy" />
+          <img
+            :src="mission.image"
+            :alt="mission.name"
+            class="mission-card__image"
+            loading="lazy"
+            decoding="async"
+          />
           <div class="mission-card__rocket-badge">{{ mission.rocketName }}</div>
         </div>
         <div class="mission-card__body">
@@ -26,29 +42,18 @@
         </div>
       </article>
     </div>
+
+    <!-- Show refresh available indicator -->
+    <div v-if="hasNewData && !loading" class="mission-gallery__refresh-banner">
+      <span>Fresh data available</span>
+      <button class="mission-gallery__refresh-btn" @click="applyUpdates">Refresh</button>
+    </div>
   </section>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import missionsData from '../data/spacex-mission-data.json'
-
-interface LL2Launch {
-  id: string
-  name: string
-  net: string
-  image: { image_url: string | null } | null
-  mission: { description: string | null } | null
-  rocket?: {
-    configuration?: {
-      name?: string | null
-    }
-  }
-}
-
-interface LL2Response {
-  results: LL2Launch[]
-}
 
 interface Mission {
   id: string
@@ -60,22 +65,55 @@ interface Mission {
   missionType?: string
 }
 
+// Launch Library API Response Interfaces
+interface RocketConfiguration {
+  name: string | null
+}
+
+interface Rocket {
+  configuration: RocketConfiguration | null
+}
+
+interface LaunchImage {
+  image_url: string | null
+}
+
+interface LaunchMission {
+  description: string | null
+}
+
+interface LaunchLibraryLaunch {
+  id: string
+  name: string
+  net: string
+  mission?: LaunchMission | null
+  rocket?: Rocket | null
+  image?: LaunchImage | null
+}
+
+interface LaunchLibraryResponse {
+  results: LaunchLibraryLaunch[]
+}
+
 const MISSION_COUNT = 15
 const CACHE_KEY = 'spacex-mission-gallery'
 const CACHE_TTL_MS = 1000 * 60 * 60 // 1 hour
 
 const missions = ref<Mission[]>([])
-const loading = ref(true)
+const loading = ref(false)
 const error = ref(false)
+const hasNewData = ref(false)
+const updatingMissionIds = ref(new Set<string>())
+let newMissionsData: Mission[] | null = null
 
 const ROCKET_DISPLAY_NAMES: Record<string, string> = {
   'Falcon 9': 'Falcon 9',
   'Falcon Heavy': 'Falcon Heavy',
-  'Starship': 'Starship',
+  Starship: 'Starship',
   'Falcon 1': 'Falcon 1',
   'Falcon 9 Block 5': 'Falcon 9 Block 5',
   'Falcon 9 v1.1': 'Falcon 9 v1.1',
-  'Falcon 9 Full Thrust': 'Falcon 9 Full Thrust'
+  'Falcon 9 Full Thrust': 'Falcon 9 Full Thrust',
 }
 
 function formatDate(dateUtc: string): string {
@@ -88,30 +126,17 @@ function formatDate(dateUtc: string): string {
 
 function getRocketDisplayName(rocketName: string | null | undefined): string {
   if (!rocketName) return 'Unknown Rocket'
-  
+
   if (ROCKET_DISPLAY_NAMES[rocketName]) {
     return ROCKET_DISPLAY_NAMES[rocketName]
   }
-  
+
   if (rocketName.includes('Falcon Heavy')) return 'Falcon Heavy'
   if (rocketName.includes('Starship')) return 'Starship'
   if (rocketName.includes('Falcon 1')) return 'Falcon 1'
   if (rocketName.includes('Falcon 9')) return 'Falcon 9'
-  
-  return rocketName
-}
 
-function mapLaunch(launch: LL2Launch): Mission {
-  const rocketName = launch.rocket?.configuration?.name || 'Unknown'
-  
-  return {
-    id: launch.id,
-    name: launch.name,
-    date: formatDate(launch.net),
-    description: launch.mission?.description || 'No mission description available.',
-    image: launch.image!.image_url!,
-    rocketName: getRocketDisplayName(rocketName)
-  }
+  return rocketName
 }
 
 function readCache(): Mission[] | null {
@@ -134,29 +159,28 @@ function writeCache(data: Mission[]): void {
   }
 }
 
-function loadFallbackData(): void {
+function loadFallbackData(): Mission[] {
   try {
-    const fallbackMissions: Mission[] = (missionsData as Mission[]).slice(0, MISSION_COUNT)
-    missions.value = fallbackMissions
-    writeCache(fallbackMissions)
-    console.log('Loaded missions from fallback data')
+    return (missionsData as Mission[]).slice(0, MISSION_COUNT)
   } catch (err) {
     console.error('Failed to load fallback data:', err)
-    error.value = true
+    return []
   }
 }
 
-async function loadMissions(): Promise<void> {
-  // Try cache first
-  const cached = readCache()
-  if (cached) {
-    missions.value = cached
-    loading.value = false
-    return
-  }
-
+async function fetchFromBackend(): Promise<Mission[] | null> {
   try {
-    // Try to load from API
+    const response = await fetch('/api/spacex/missions?limit=' + MISSION_COUNT)
+    if (!response.ok) throw new Error(`Backend responded with ${response.status}`)
+    return await response.json()
+  } catch (err) {
+    console.warn('Failed to fetch from backend:', err)
+    return null
+  }
+}
+
+async function fetchFromLaunchLibrary(): Promise<Mission[] | null> {
+  try {
     const params = new URLSearchParams({
       lsp__name: 'SpaceX',
       mode: 'detailed',
@@ -165,14 +189,14 @@ async function loadMissions(): Promise<void> {
     })
     const res = await fetch(`https://ll.thespacedevs.com/2.3.0/launches/previous/?${params}`)
     if (!res.ok) throw new Error(`Launch Library API responded ${res.status}`)
-    const data: LL2Response = await res.json()
+    const data = (await res.json()) as LaunchLibraryResponse
 
     const seenImages = new Set<string>()
     const rocketCounts = new Map<string, number>()
     const MAX_PER_ROCKET = 2
 
-    const withImages = data.results
-      .filter((launch): launch is LL2Launch & { image: { image_url: string } } => {
+    return data.results
+      .filter((launch: LaunchLibraryLaunch) => {
         const url = launch.image?.image_url
         if (!url || seenImages.has(url)) return false
 
@@ -185,27 +209,88 @@ async function loadMissions(): Promise<void> {
         return true
       })
       .slice(0, MISSION_COUNT)
-      .map(mapLaunch)
-
-    if (withImages.length > 0) {
-      missions.value = withImages
-      writeCache(withImages)
-      console.log('Loaded missions from API')
-    } else {
-      // No images from API, use fallback
-      console.warn('No missions with images from API, using fallback data')
-      loadFallbackData()
-    }
+      .map((launch: LaunchLibraryLaunch) => ({
+        id: launch.id,
+        name: launch.name,
+        date: formatDate(launch.net),
+        description: launch.mission?.description || 'No mission description available.',
+        image: launch.image!.image_url!,
+        rocketName: getRocketDisplayName(launch.rocket?.configuration?.name),
+      }))
   } catch (err) {
-    console.error('Failed to load from API, using fallback data:', err)
-    // Use fallback data on any API error
-    loadFallbackData()
-  } finally {
-    loading.value = false
+    console.warn('Failed to fetch from Launch Library:', err)
+    return null
   }
 }
 
-onMounted(loadMissions)
+function applyUpdates(): void {
+  if (newMissionsData) {
+    missions.value = newMissionsData
+    writeCache(newMissionsData)
+    hasNewData.value = false
+    newMissionsData = null
+    updatingMissionIds.value.clear()
+  }
+}
+
+async function loadMissionsInBackground(): Promise<void> {
+  // Try backend first (faster), then Launch Library API
+  let newData = await fetchFromBackend()
+
+  if (!newData) {
+    newData = await fetchFromLaunchLibrary()
+  }
+
+  if (newData && newData.length > 0) {
+    // Check if data is different from current
+    const isNewData = missions.value.length === 0 || newData[0]?.id !== missions.value[0]?.id
+
+    if (isNewData) {
+      newMissionsData = newData
+      writeCache(newData)
+
+      // Mark which cards are being updated
+      newData.forEach((mission) => updatingMissionIds.value.add(mission.id))
+      hasNewData.value = true
+
+      console.log('New mission data available, refresh banner shown')
+    } else {
+      console.log('Mission data unchanged')
+      writeCache(newData) // Update cache timestamp
+    }
+  }
+}
+
+async function initializeMissions(): Promise<void> {
+  // PHASE 1: Display cached or fallback data immediately (non-blocking)
+  const cached = readCache()
+  if (cached && cached.length > 0) {
+    missions.value = cached
+    console.log('Displaying cached missions immediately')
+  } else {
+    const fallback = loadFallbackData()
+    if (fallback.length > 0) {
+      missions.value = fallback
+      console.log('Displaying fallback missions immediately')
+    } else {
+      loading.value = true
+    }
+  }
+
+  // PHASE 2: Fetch fresh data in background (non-blocking)
+  loadMissionsInBackground()
+    .catch((err) => {
+      console.error('Background fetch failed:', err)
+      if (missions.value.length === 0) {
+        error.value = true
+      }
+    })
+    .finally(() => {
+      loading.value = false
+    })
+}
+
+onMounted(initializeMissions)
 </script>
 
 <style scoped>
@@ -234,7 +319,10 @@ onMounted(loadMissions)
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    opacity 0.3s ease;
 }
 
 .mission-card:hover {
@@ -242,9 +330,14 @@ onMounted(loadMissions)
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
+.mission-card--updating {
+  opacity: 0.7;
+}
+
 .mission-card__image-wrapper {
   position: relative;
   overflow: hidden;
+  background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
 }
 
 .mission-card__image {
@@ -252,8 +345,8 @@ onMounted(loadMissions)
   aspect-ratio: 16 / 10;
   object-fit: cover;
   display: block;
-  background: var(--color-bg-raised);
   transition: transform 0.3s ease;
+  background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
 }
 
 .mission-card:hover .mission-card__image {
@@ -325,5 +418,34 @@ onMounted(loadMissions)
   -webkit-box-orient: vertical;
   overflow: hidden;
   flex: 1;
+}
+
+.mission-gallery__refresh-banner {
+  margin-top: 32px;
+  padding: 16px;
+  background: var(--color-bg-accent, rgba(14, 165, 233, 0.1));
+  border: 1px solid var(--color-accent, #0ea5e9);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  color: var(--color-text);
+}
+
+.mission-gallery__refresh-btn {
+  padding: 6px 14px;
+  background: var(--color-accent, #0ea5e9);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.mission-gallery__refresh-btn:hover {
+  background: var(--color-accent-hover, #0284c7);
 }
 </style>
