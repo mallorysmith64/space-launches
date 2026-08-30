@@ -3,26 +3,13 @@
     <p class="eyebrow">Mission gallery</p>
     <h2 class="section-title">Recent missions, in pictures.</h2>
     <p class="section-lede">
-      A look back at SpaceX's most recent completed flights — mission photos where they exist,
-      patches where they don't. Each card features a different SpaceX rocket.
+      A look back at SpaceX's most recent completed flights — one photo per mission, no repeats.
+      Each card features a different SpaceX rocket.
     </p>
 
-    <!-- Show loading state only if no data available at all -->
-    <div v-if="missions.length === 0 && loading" class="mission-gallery__status">
-      Loading missions…
-    </div>
-    <div v-else-if="error && missions.length === 0" class="mission-gallery__status">
-      Couldn't load mission images right now. Try refreshing the page.
-    </div>
-
-    <!-- Show missions grid (from cache/fallback) -->
-    <div v-else class="mission-gallery__grid">
-      <article
-        v-for="mission in missions"
-        :key="mission.id"
-        class="mission-card"
-        :class="{ 'mission-card--updating': updatingMissionIds.has(mission.id) }"
-      >
+    <!-- Show missions grid -->
+    <div v-if="missions.length > 0" class="mission-gallery__grid">
+      <article v-for="mission in missions" :key="mission.id" class="mission-card">
         <div class="mission-card__image-wrapper">
           <img
             :src="mission.image"
@@ -43,11 +30,7 @@
       </article>
     </div>
 
-    <!-- Show refresh available indicator -->
-    <div v-if="hasNewData && !loading" class="mission-gallery__refresh-banner">
-      <span>Fresh data available</span>
-      <button class="mission-gallery__refresh-btn" @click="applyUpdates">Refresh</button>
-    </div>
+    <div v-else class="mission-gallery__status">No mission images available.</div>
   </section>
 </template>
 
@@ -65,232 +48,36 @@ interface Mission {
   missionType?: string
 }
 
-// Launch Library API Response Interfaces
-interface RocketConfiguration {
-  name: string | null
-}
-
-interface Rocket {
-  configuration: RocketConfiguration | null
-}
-
-interface LaunchImage {
-  image_url: string | null
-}
-
-interface LaunchMission {
-  description: string | null
-}
-
-interface LaunchLibraryLaunch {
-  id: string
-  name: string
-  net: string
-  mission?: LaunchMission | null
-  rocket?: Rocket | null
-  image?: LaunchImage | null
-}
-
-interface LaunchLibraryResponse {
-  results: LaunchLibraryLaunch[]
-}
-
-const MISSION_COUNT = 30
-const CACHE_KEY = 'spacex-mission-gallery-v2'
-const CACHE_TTL_MS = 1000 * 60 * 60 // 1 hour
-
 const missions = ref<Mission[]>([])
-const loading = ref(false)
-const error = ref(false)
-const hasNewData = ref(false)
-const updatingMissionIds = ref(new Set<string>())
-let newMissionsData: Mission[] | null = null
 
-const ROCKET_DISPLAY_NAMES: Record<string, string> = {
-  'Falcon 9': 'Falcon 9',
-  'Falcon Heavy': 'Falcon Heavy',
-  Starship: 'Starship',
-  'Falcon 1': 'Falcon 1',
-  'Falcon 9 Block 5': 'Falcon 9 Block 5',
-  'Falcon 9 v1.1': 'Falcon 9 v1.1',
-  'Falcon 9 Full Thrust': 'Falcon 9 Full Thrust',
-}
-
-function formatDate(dateUtc: string): string {
-  return new Date(dateUtc).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
-}
-
-function getRocketDisplayName(rocketName: string | null | undefined): string {
-  if (!rocketName) return 'Unknown Rocket'
-
-  if (ROCKET_DISPLAY_NAMES[rocketName]) {
-    return ROCKET_DISPLAY_NAMES[rocketName]
-  }
-
-  if (rocketName.includes('Falcon Heavy')) return 'Falcon Heavy'
-  if (rocketName.includes('Starship')) return 'Starship'
-  if (rocketName.includes('Falcon 1')) return 'Falcon 1'
-  if (rocketName.includes('Falcon 9')) return 'Falcon 9'
-
-  return rocketName
-}
-
-function readCache(): Mission[] | null {
+/**
+ * Loads missions straight from the bundled JSON, keeping only one mission per
+ * unique image URL (first occurrence wins) so no photo appears twice in the
+ * grid. Missions are included even if their image URL turns out to be broken —
+ * we don't have a way to verify reachability at build time, so we render them
+ * as-is for now.
+ */
+function loadMissions(): Mission[] {
   try {
-    const raw = localStorage.getItem(CACHE_KEY)
-    if (!raw) return null
-    const { timestamp, data } = JSON.parse(raw) as { timestamp: number; data: Mission[] }
-    if (Date.now() - timestamp > CACHE_TTL_MS) return null
-    return data
-  } catch {
-    return null
-  }
-}
+    const seenImages = new Set<string>()
+    const deduped: Mission[] = []
 
-function writeCache(data: Mission[]): void {
-  try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify({ timestamp: Date.now(), data }))
-  } catch {
-    // Storage unavailable or full
-  }
-}
+    for (const mission of missionsData as Mission[]) {
+      if (!mission.image || seenImages.has(mission.image)) continue
+      seenImages.add(mission.image)
+      deduped.push(mission)
+    }
 
-function loadFallbackData(): Mission[] {
-  try {
-    return (missionsData as Mission[]).slice(0, MISSION_COUNT)
+    return deduped
   } catch (err) {
-    console.error('Failed to load fallback data:', err)
+    console.error('Failed to load mission data:', err)
     return []
   }
 }
 
-async function fetchFromBackend(): Promise<Mission[] | null> {
-  try {
-    const response = await fetch('/api/spacex/missions?limit=' + MISSION_COUNT)
-    if (!response.ok) throw new Error(`Backend responded with ${response.status}`)
-    return await response.json()
-  } catch (err) {
-    console.warn('Failed to fetch from backend:', err)
-    return null
-  }
-}
-
-async function fetchFromLaunchLibrary(): Promise<Mission[] | null> {
-  try {
-    const params = new URLSearchParams({
-      lsp__name: 'SpaceX',
-      mode: 'detailed',
-      limit: '150',
-      ordering: '-net',
-    })
-    const res = await fetch(`https://ll.thespacedevs.com/2.3.0/launches/previous/?${params}`)
-    if (!res.ok) throw new Error(`Launch Library API responded ${res.status}`)
-    const data = (await res.json()) as LaunchLibraryResponse
-
-    const seenImages = new Set<string>()
-    const rocketCounts = new Map<string, number>()
-    const MAX_PER_ROCKET = 2
-
-    return data.results
-      .filter((launch: LaunchLibraryLaunch) => {
-        const url = launch.image?.image_url
-        if (!url || seenImages.has(url)) return false
-
-        const rocketName = getRocketDisplayName(launch.rocket?.configuration?.name)
-        const count = rocketCounts.get(rocketName) || 0
-        if (count >= MAX_PER_ROCKET) return false
-
-        seenImages.add(url)
-        rocketCounts.set(rocketName, count + 1)
-        return true
-      })
-      .slice(0, MISSION_COUNT)
-      .map((launch: LaunchLibraryLaunch) => ({
-        id: launch.id,
-        name: launch.name,
-        date: formatDate(launch.net),
-        description: launch.mission?.description || 'No mission description available.',
-        image: launch.image!.image_url!,
-        rocketName: getRocketDisplayName(launch.rocket?.configuration?.name),
-      }))
-  } catch (err) {
-    console.warn('Failed to fetch from Launch Library:', err)
-    return null
-  }
-}
-
-function applyUpdates(): void {
-  if (newMissionsData) {
-    missions.value = newMissionsData
-    writeCache(newMissionsData)
-    hasNewData.value = false
-    newMissionsData = null
-    updatingMissionIds.value.clear()
-  }
-}
-
-async function loadMissionsInBackground(): Promise<void> {
-  // Try backend first (faster), then Launch Library API
-  let newData = await fetchFromBackend()
-
-  if (!newData) {
-    newData = await fetchFromLaunchLibrary()
-  }
-
-  if (newData && newData.length > 0) {
-    // Check if data is different from current
-    const isNewData = missions.value.length === 0 || newData[0]?.id !== missions.value[0]?.id
-
-    if (isNewData) {
-      newMissionsData = newData
-      writeCache(newData)
-
-      // Mark which cards are being updated
-      newData.forEach((mission) => updatingMissionIds.value.add(mission.id))
-      hasNewData.value = true
-
-      console.log('New mission data available, refresh banner shown')
-    } else {
-      console.log('Mission data unchanged')
-      writeCache(newData) // Update cache timestamp
-    }
-  }
-}
-
-async function initializeMissions(): Promise<void> {
-  // PHASE 1: Display cached or fallback data immediately (non-blocking)
-  const cached = readCache()
-  if (cached && cached.length > 0) {
-    missions.value = cached
-    console.log('Displaying cached missions immediately')
-  } else {
-    const fallback = loadFallbackData()
-    if (fallback.length > 0) {
-      missions.value = fallback
-      console.log('Displaying fallback missions immediately')
-    } else {
-      loading.value = true
-    }
-  }
-
-  // PHASE 2: Fetch fresh data in background (non-blocking)
-  loadMissionsInBackground()
-    .catch((err) => {
-      console.error('Background fetch failed:', err)
-      if (missions.value.length === 0) {
-        error.value = true
-      }
-    })
-    .finally(() => {
-      loading.value = false
-    })
-}
-
-onMounted(initializeMissions)
+onMounted(() => {
+  missions.value = loadMissions()
+})
 </script>
 
 <style scoped>
@@ -321,17 +108,12 @@ onMounted(initializeMissions)
   flex-direction: column;
   transition:
     transform 0.2s ease,
-    box-shadow 0.2s ease,
-    opacity 0.3s ease;
+    box-shadow 0.2s ease;
 }
 
 .mission-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.mission-card--updating {
-  opacity: 0.7;
 }
 
 .mission-card__image-wrapper {
@@ -418,34 +200,5 @@ onMounted(initializeMissions)
   -webkit-box-orient: vertical;
   overflow: hidden;
   flex: 1;
-}
-
-.mission-gallery__refresh-banner {
-  margin-top: 32px;
-  padding: 16px;
-  background: var(--color-bg-accent, rgba(14, 165, 233, 0.1));
-  border: 1px solid var(--color-accent, #0ea5e9);
-  border-radius: var(--radius);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 14px;
-  color: var(--color-text);
-}
-
-.mission-gallery__refresh-btn {
-  padding: 6px 14px;
-  background: var(--color-accent, #0ea5e9);
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-.mission-gallery__refresh-btn:hover {
-  background: var(--color-accent-hover, #0284c7);
 }
 </style>
