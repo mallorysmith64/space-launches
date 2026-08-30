@@ -40,7 +40,7 @@
     "name": "WorldView Legion Mission",
     "date": "September 12, 2023",
     "rocketName": "Falcon 9",
-    "image": "src/images/WorldView_Legion_Mission.jpeg",
+    "image": "src/images/Worldview_Legion_Mission.jpeg",
     "description": "Launch of high-resolution Earth imaging satellites for Maxar Technologies. These satellites provide detailed satellite imagery for commercial and government applications.",
     "missionType": "Commercial Imaging"
   },
@@ -85,7 +85,7 @@
     "name": "Starship Integrated Flight Test 1",
     "date": "April 20, 2023",
     "rocketName": "Starship",
-    "image": "src/images/Starship_Integrated_Flight__Test_1.jpeg",
+    "image": "src/images/Starship_Integrated_Flight _Test_1.jpeg",
     "description": "First integrated flight test of the fully stacked Starship vehicle. Despite RUD (rapid unscheduled disassembly), the test achieved valuable data for vehicle development.",
     "missionType": "Development Flight"
   },
@@ -103,7 +103,7 @@
     "name": "Starship Integrated Flight Test 3",
     "date": "March 14, 2024",
     "rocketName": "Starship",
-    "image": "src/images/Starship_Integrated_Flight_Test_3.jpeg",
+    "image": "src/images/Starship_Integrated_Flight _Test_1.jpeg",
     "description": "Third integrated flight test demonstrating continuous improvements. Ship hot staging was achieved, advancing toward engine separation in space.",
     "missionType": "Development Flight"
   },
@@ -112,7 +112,7 @@
     "name": "Starship Integrated Flight Test 4",
     "date": "June 6, 2024",
     "rocketName": "Starship",
-    "image": "missing_image_here",
+    "image": "src/images/Starship_Integrated_Flight_Test_4.jpeg",
     "description": "Fourth test flight achieving booster catch attempt and advanced Ship testing. Represented significant progress toward orbital refueling capability.",
     "missionType": "Development Flight"
   },
@@ -121,7 +121,7 @@
     "name": "Crew-7 Dragon Crewed Mission",
     "date": "August 26, 2023",
     "rocketName": "Falcon 9",
-    "image": "missing_image_here",
+    "image": "src/images/Crew-7_Dragon_Crewed_Mission.jpeg",
     "description": "Launch of four astronauts on Crew Dragon for a six-month expedition to the International Space Station. Falcon 9 delivered the capsule to orbit.",
     "missionType": "Crewed Spaceflight"
   },
@@ -130,7 +130,7 @@
     "name": "Palantir StarShield-5",
     "date": "February 27, 2024",
     "rocketName": "Falcon 9",
-    "image": "missing_image_here",
+    "image": "src/images/Palantir_StarShield-5.jpeg",
     "description": "Launch of synthetic aperture radar imaging satellite for national security. Falcon 9 delivered the advanced reconnaissance spacecraft to polar orbit.",
     "missionType": "Reconnaissance"
   },
@@ -193,7 +193,7 @@
     "name": "IXPE (Imaging X-ray Polarimetry Explorer)",
     "date": "December 9, 2021",
     "rocketName": "Falcon 9",
-    "image": "missing_image_here",
+    "image": "src/images/IXPE_Imaging_X-ray_Polarimetry_Explorer.jpeg",
     "description": "Launch of a NASA space telescope designed to study X-rays from some of the most extreme objects in the universe, including black holes, neutron stars, and supernova remnants.",
     "missionType": "Space Telescope Launch"
   },
@@ -211,7 +211,7 @@
     "name": "EchoStar 24 (Jupiter 3)",
     "date": "July 28, 2023",
     "rocketName": "Falcon Heavy",
-    "image": "missing_image_here",
+    "image": "src/images/EchoStar_24_Jupiter_3.jpeg",
     "description": "Falcon Heavy delivered one of the largest commercial communications satellites ever built to geostationary orbit, boosting broadband capacity for EchoStar's Jupiter satellite fleet.",
     "missionType": "Commercial Satellite"
   },
