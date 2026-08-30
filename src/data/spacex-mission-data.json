@@ -40,7 +40,7 @@
     "name": "WorldView Legion Mission",
     "date": "September 12, 2023",
     "rocketName": "Falcon 9",
-    "image": "missing_image_here",
+    "image": "src/images/WorldView_Legion_Mission.jpeg",
     "description": "Launch of high-resolution Earth imaging satellites for Maxar Technologies. These satellites provide detailed satellite imagery for commercial and government applications.",
     "missionType": "Commercial Imaging"
   },
@@ -49,7 +49,7 @@
     "name": "Transporter-7 Rideshare",
     "date": "April 5, 2024",
     "rocketName": "Falcon 9",
-    "image": "missing_image_here",
+    "image": "src/images/Transporter-7_Rideshare.jpeg",
     "description": "The seventh dedicated rideshare mission deploying 115+ small satellites and payloads. This cost-effective launch enables startups to reach orbit.",
     "missionType": "Rideshare Launch"
   },
@@ -67,7 +67,7 @@
     "name": "Viasat-3 Americas",
     "date": "December 19, 2023",
     "rocketName": "Falcon Heavy",
-    "image": "image_missing_here",
+    "image": "src/images/Viasat-3_Americas.jpeg",
     "description": "Launch of the advanced Viasat-3 broadband satellite. Falcon Heavy delivered the massive telecommunications satellite to geosynchronous orbit for global internet coverage.",
     "missionType": "Commercial Satellite"
   },
@@ -94,7 +94,7 @@
     "name": "Starship Integrated Flight Test 2",
     "date": "November 18, 2023",
     "rocketName": "Starship",
-    "image": "missing_image_here",
+    "image": "src/images/Starship_Integrated_Flight_Test_2.jpeg",
     "description": "Second integrated flight test with improved Booster and Ship. The vehicle reached space and completed a controlled reentry and ocean splashdown.",
     "missionType": "Development Flight"
   },
@@ -103,7 +103,7 @@
     "name": "Starship Integrated Flight Test 3",
     "date": "March 14, 2024",
     "rocketName": "Starship",
-    "image": "missing_image_here",
+    "image": "src/images/Starship_Integrated_Flight_Test_3.jpeg",
     "description": "Third integrated flight test demonstrating continuous improvements. Ship hot staging was achieved, advancing toward engine separation in space.",
     "missionType": "Development Flight"
   },
