@@ -142,5 +142,140 @@
     "image": "https://images.unsplash.com/photo-1452664694703-e5c149814c17?w=800&q=80",
     "description": "Launch of Intelsat 901 telecommunications satellite. The mission involved relocating the satellite to a new orbital slot for improved service coverage.",
     "missionType": "Commercial Telecom"
+  },
+  {
+    "id": "falcon-heavy-demo",
+    "name": "Falcon Heavy Demo Flight",
+    "date": "February 6, 2018",
+    "rocketName": "Falcon Heavy",
+    "image": "https://thespacedevs-dev.nyc3.digitaloceanspaces.com/media/images/falcon_heavy_image_20220129192819.jpeg",
+    "description": "The maiden flight of Falcon Heavy, then the world's most powerful operational rocket. The demo flight famously carried Elon Musk's Tesla Roadster as a test payload and closed with the simultaneous landing of both side boosters back at Cape Canaveral.",
+    "missionType": "Demonstration Flight"
+  },
+  {
+    "id": "falcon9-crew-dragon-demo-1",
+    "name": "Crew Dragon Demo-1",
+    "date": "March 2, 2019",
+    "rocketName": "Falcon 9",
+    "image": "https://thespacedevs-dev.nyc3.digitaloceanspaces.com/media/images/spacex_image_20190207032501.jpeg",
+    "description": "The first uncrewed test flight of the Crew Dragon spacecraft, which autonomously docked with the International Space Station and returned safely to Earth, clearing the way for astronauts to fly on the vehicle.",
+    "missionType": "Demonstration Flight"
+  },
+  {
+    "id": "falcon9-crew-dragon-demo-2",
+    "name": "Crew Dragon Demo-2",
+    "date": "May 30, 2020",
+    "rocketName": "Falcon 9",
+    "image": "https://thespacedevs-dev.nyc3.digitaloceanspaces.com/media/images/falcon_9_image_20230807133459.jpeg",
+    "description": "The first crewed launch of Crew Dragon, carrying NASA astronauts Bob Behnken and Doug Hurley to the ISS. It marked the return of human spaceflight launches from American soil after nearly a decade.",
+    "missionType": "Crewed Spaceflight"
+  },
+  {
+    "id": "falcon9-inspiration4",
+    "name": "Inspiration4",
+    "date": "September 16, 2021",
+    "rocketName": "Falcon 9",
+    "image": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/falcon2520925_image_20210914155606.jpeg",
+    "description": "The first orbital spaceflight crewed entirely by private citizens. A four-person crew spent three days circling the Earth aboard Crew Dragon while raising money for St. Jude Children's Research Hospital.",
+    "missionType": "Crewed Commercial Mission"
+  },
+  {
+    "id": "falcon9-dart",
+    "name": "DART (Double Asteroid Redirection Test)",
+    "date": "November 24, 2021",
+    "rocketName": "Falcon 9",
+    "image": "https://thespacedevs-dev.nyc3.digitaloceanspaces.com/media/images/falcon2520925_image_20221009234147.png",
+    "description": "A NASA planetary defense mission that intentionally crashed a spacecraft into the asteroid moonlet Dimorphos, successfully demonstrating that a kinetic impactor can alter an asteroid's orbit.",
+    "missionType": "Planetary Science"
+  },
+  {
+    "id": "falcon9-ixpe",
+    "name": "IXPE (Imaging X-ray Polarimetry Explorer)",
+    "date": "December 9, 2021",
+    "rocketName": "Falcon 9",
+    "image": "https://thespacedevs-dev.nyc3.digitaloceanspaces.com/media/images/falcon_9_image_20230807133459.jpeg",
+    "description": "Launch of a NASA space telescope designed to study X-rays from some of the most extreme objects in the universe, including black holes, neutron stars, and supernova remnants.",
+    "missionType": "Space Telescope Launch"
+  },
+  {
+    "id": "falcon9-axiom-1",
+    "name": "Axiom Mission 1",
+    "date": "April 8, 2022",
+    "rocketName": "Falcon 9",
+    "image": "https://thespacedevs-dev.nyc3.digitaloceanspaces.com/media/images/spacex_image_20190207032501.jpeg",
+    "description": "The first fully private crewed mission to the International Space Station, carrying a commander and three paying crew members for roughly ten days of research and commercial activities in orbit.",
+    "missionType": "Crewed Commercial Mission"
+  },
+  {
+    "id": "falcon-heavy-echostar-24",
+    "name": "EchoStar 24 (Jupiter 3)",
+    "date": "July 28, 2023",
+    "rocketName": "Falcon Heavy",
+    "image": "https://thespacedevs-dev.nyc3.digitaloceanspaces.com/media/images/falcon_heavy_image_20220129192819.jpeg",
+    "description": "Falcon Heavy delivered one of the largest commercial communications satellites ever built to geostationary orbit, boosting broadband capacity for EchoStar's Jupiter satellite fleet.",
+    "missionType": "Commercial Satellite"
+  },
+  {
+    "id": "falcon9-euclid",
+    "name": "Euclid Space Telescope",
+    "date": "July 1, 2023",
+    "rocketName": "Falcon 9",
+    "image": "https://thespacedevs-dev.nyc3.digitaloceanspaces.com/media/images/falcon2520925_image_20221009234147.png",
+    "description": "Launch of the European Space Agency's Euclid observatory, tasked with mapping billions of galaxies to investigate the nature of dark matter and dark energy across the universe.",
+    "missionType": "Space Telescope Launch"
+  },
+  {
+    "id": "falcon-heavy-psyche",
+    "name": "Psyche",
+    "date": "October 13, 2023",
+    "rocketName": "Falcon Heavy",
+    "image": "https://thespacedevs-dev.nyc3.digitaloceanspaces.com/media/images/falcon_heavy_image_20220129192819.jpeg",
+    "description": "Falcon Heavy sent NASA's Psyche spacecraft on a journey to a metal-rich asteroid of the same name, offering scientists a rare look at what may be the exposed core of an early planetary building block.",
+    "missionType": "Planetary Science"
+  },
+  {
+    "id": "falcon9-im-1-odysseus",
+    "name": "IM-1 (Odysseus Lunar Lander)",
+    "date": "February 15, 2024",
+    "rocketName": "Falcon 9",
+    "image": "https://thespacedevs-dev.nyc3.digitaloceanspaces.com/media/images/falcon_9_image_20230807133459.jpeg",
+    "description": "Falcon 9 launched Intuitive Machines' Odysseus lander toward the Moon, which went on to become the first commercially built spacecraft to achieve a soft lunar landing and the first U.S. lunar touchdown since Apollo.",
+    "missionType": "Commercial Lunar Mission"
+  },
+  {
+    "id": "falcon9-polaris-dawn",
+    "name": "Polaris Dawn",
+    "date": "September 10, 2024",
+    "rocketName": "Falcon 9",
+    "image": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/falcon2520925_image_20210914155606.jpeg",
+    "description": "A privately funded Crew Dragon mission that flew farther from Earth than any human spaceflight since Apollo and included the first spacewalk performed by a commercial crew.",
+    "missionType": "Crewed Commercial Mission"
+  },
+  {
+    "id": "falcon9-crew-9",
+    "name": "Crew-9 Dragon Mission",
+    "date": "September 28, 2024",
+    "rocketName": "Falcon 9",
+    "image": "https://thespacedevs-dev.nyc3.digitaloceanspaces.com/media/images/spacex_image_20190207032501.jpeg",
+    "description": "A NASA Commercial Crew rotation mission that flew astronauts to the International Space Station for a long-duration science expedition aboard Crew Dragon.",
+    "missionType": "Crewed Spaceflight"
+  },
+  {
+    "id": "starship-ifd-5",
+    "name": "Starship Integrated Flight Test 5",
+    "date": "October 13, 2024",
+    "rocketName": "Starship",
+    "image": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/starship_mk1_at_image_20240307091751.jpeg",
+    "description": "SpaceX achieved the first successful catch of a returning Super Heavy booster using the launch tower's mechanical arms, a major milestone toward rapid vehicle reuse.",
+    "missionType": "Development Flight"
+  },
+  {
+    "id": "starship-ifd-6",
+    "name": "Starship Integrated Flight Test 6",
+    "date": "November 19, 2024",
+    "rocketName": "Starship",
+    "image": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/starship_mk1_at_image_20240307091751.jpeg",
+    "description": "The sixth integrated flight test featured a relit Raptor engine demonstration in space and further refinements to Ship reentry and splashdown, though the booster was diverted to a controlled ocean landing.",
+    "missionType": "Development Flight"
   }
 ]

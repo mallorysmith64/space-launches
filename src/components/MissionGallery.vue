@@ -95,8 +95,8 @@ interface LaunchLibraryResponse {
   results: LaunchLibraryLaunch[]
 }
 
-const MISSION_COUNT = 15
-const CACHE_KEY = 'spacex-mission-gallery'
+const MISSION_COUNT = 30
+const CACHE_KEY = 'spacex-mission-gallery-v2'
 const CACHE_TTL_MS = 1000 * 60 * 60 // 1 hour
 
 const missions = ref<Mission[]>([])
