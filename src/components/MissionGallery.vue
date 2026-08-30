@@ -2,10 +2,7 @@
   <section class="section container mission-gallery">
     <p class="eyebrow">Mission gallery</p>
     <h2 class="section-title">Recent missions, in pictures.</h2>
-    <p class="section-lede">
-      A look back at SpaceX's most recent completed flights — one photo per mission, no repeats.
-      Each card features a different SpaceX rocket.
-    </p>
+    <p class="section-lede">A look back at SpaceX's rockets and completed flights</p>
 
     <!-- Show missions grid -->
     <div v-if="missions.length > 0" class="mission-gallery__grid">

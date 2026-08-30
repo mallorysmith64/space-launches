@@ -179,6 +179,10 @@ h3 {
   background: rgba(79, 209, 255, 0.1);
 }
 
+.mission-gallery {
+  padding: 2em;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

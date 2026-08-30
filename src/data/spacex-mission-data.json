@@ -139,7 +139,7 @@
     "name": "Intelsat 901 Relocation",
     "date": "January 6, 2024",
     "rocketName": "Falcon 9",
-    "image": "missing_image_here",
+    "image": "src/images/Intelsat_901_Relocation.jpeg",
     "description": "Launch of Intelsat 901 telecommunications satellite. The mission involved relocating the satellite to a new orbital slot for improved service coverage.",
     "missionType": "Commercial Telecom"
   },
@@ -202,7 +202,7 @@
     "name": "Axiom Mission 1",
     "date": "April 8, 2022",
     "rocketName": "Falcon 9",
-    "image": "missing_image_here",
+    "image": "src/images/Axiom_Mission_1.jpeg",
     "description": "The first fully private crewed mission to the International Space Station, carrying a commander and three paying crew members for roughly ten days of research and commercial activities in orbit.",
     "missionType": "Crewed Commercial Mission"
   },
@@ -220,7 +220,7 @@
     "name": "Euclid Space Telescope",
     "date": "July 1, 2023",
     "rocketName": "Falcon 9",
-    "image": "missing_image_here",
+    "image": "/src/images/Euclid.jpeg",
     "description": "Launch of the European Space Agency's Euclid observatory, tasked with mapping billions of galaxies to investigate the nature of dark matter and dark energy across the universe.",
     "missionType": "Space Telescope Launch"
   },
@@ -229,7 +229,7 @@
     "name": "Psyche",
     "date": "October 13, 2023",
     "rocketName": "Falcon Heavy",
-    "image": "missing_image_here",
+    "image": "src/images/Psyche.jpeg",
     "description": "Falcon Heavy sent NASA's Psyche spacecraft on a journey to a metal-rich asteroid of the same name, offering scientists a rare look at what may be the exposed core of an early planetary building block.",
     "missionType": "Planetary Science"
   },
@@ -238,7 +238,7 @@
     "name": "IM-1 (Odysseus Lunar Lander)",
     "date": "February 15, 2024",
     "rocketName": "Falcon 9",
-    "image": "missing_image_here",
+    "image": "src/images/IM-1_Odysseus_Lunar_Lander.jpeg",
     "description": "Falcon 9 launched Intuitive Machines' Odysseus lander toward the Moon, which went on to become the first commercially built spacecraft to achieve a soft lunar landing and the first U.S. lunar touchdown since Apollo.",
     "missionType": "Commercial Lunar Mission"
   },
@@ -274,7 +274,7 @@
     "name": "Starship Integrated Flight Test 6",
     "date": "November 19, 2024",
     "rocketName": "Starship",
-    "image": "mission_image_here",
+    "image": "src/images/Starship_Integrated_Flight_Test_6.jpeg",
     "description": "The sixth integrated flight test featured a relit Raptor engine demonstration in space and further refinements to Ship reentry and splashdown, though the booster was diverted to a controlled ocean landing.",
     "missionType": "Development Flight"
   }
