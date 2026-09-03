@@ -10,7 +10,7 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', '1331928c7a8e12abf1899118ad6e5fd885a27f9c66439bbb030a2792ee4900d3')
 
 # Configure upload folder and allowed file types
-UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'src', 'images')
+UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), '..', 'src', 'images')
 ALLOWED_EXTENSIONS = {'jpeg', 'jpg'}
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB in bytes
 
@@ -66,7 +66,7 @@ def delete_old_image(mission_title):
 
 def get_json_path():
     """Get the path to the mission data JSON file"""
-    return os.path.join(os.path.dirname(__file__), 'src', 'data', 'spacex-mission-data.json')
+    return os.path.join(os.path.dirname(__file__), '..', 'src', 'data', 'spacex-mission-data.json')
 
 def update_mission_json(mission_id, new_image_path):
     """
@@ -224,8 +224,9 @@ def upload_image():
         # Save the file
         file.save(filepath)
         
-        # Return the relative path for the frontend to use
-        image_path = f'/static/images/{filename}'
+        # Return the relative path for the frontend to use (matches the
+        # /src/images/... convention already used by every mission entry)
+        image_path = f'/src/images/{filename}'
         
         # Update the mission JSON with the new image path
         mission_id = request.form.get('missionId', '')
