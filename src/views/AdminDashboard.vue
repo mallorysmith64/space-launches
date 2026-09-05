@@ -121,6 +121,15 @@ interface Mission {
   missionType?: string
 }
 
+interface ApiResponse {
+  message?: string
+  imagePath?: string
+  error?: string
+}
+
+// API Base URL - point to Flask backend on port 5000
+const API_BASE_URL = 'http://localhost:5000'
+
 const router = useRouter()
 const missions = ref<Mission[]>([])
 const isLoading = ref(false)
@@ -129,11 +138,11 @@ const isLoading = ref(false)
 const showEditModal = ref(false)
 const editingMission = ref<Mission | null>(null)
 const selectedFile = ref<File | null>(null)
-const previewUrl = ref<string>('')
+const previewUrl = ref('')
 const isUploading = ref(false)
-const uploadError = ref<string>('')
-const uploadSuccess = ref<string>('')
-const fileInput = ref<HTMLInputElement>()
+const uploadError = ref('')
+const uploadSuccess = ref('')
+const fileInput = ref<HTMLInputElement | undefined>(undefined)
 
 /**
  * Loads missions straight from the bundled JSON, keeping only one mission per
@@ -227,6 +236,32 @@ function onFileSelected(event: Event): void {
 }
 
 /**
+ * Safely parse JSON response with fallback for non-JSON responses
+ */
+async function parseResponseJson(response: Response): Promise<ApiResponse> {
+  try {
+    const contentType = response.headers.get('content-type')
+
+    // Check if response is actually JSON
+    if (contentType && contentType.includes('application/json')) {
+      return await response.json()
+    } else {
+      // Return error object for non-JSON responses (like HTML error pages)
+      return {
+        error: `Server error: ${response.status} ${response.statusText}`,
+        message: `Server error: ${response.status} ${response.statusText}`,
+      }
+    }
+  } catch (err) {
+    console.error('Failed to parse response:', err)
+    return {
+      error: 'Failed to parse server response',
+      message: 'Failed to parse server response',
+    }
+  }
+}
+
+/**
  * Saves image to backend and updates mission
  */
 async function saveImage(): Promise<void> {
@@ -242,26 +277,40 @@ async function saveImage(): Promise<void> {
     formData.append('missionId', editingMission.value.id)
     formData.append('missionTitle', editingMission.value.name)
 
-    const response = await fetch('/api/admin/upload-image', {
+    // Use full API URL pointing to Flask backend on port 5000
+    const response = await fetch(`${API_BASE_URL}/api/admin/upload-image`, {
       method: 'POST',
       body: formData,
       credentials: 'include',
     })
 
-    const data = await response.json()
+    // Safely parse response as JSON with fallback
+    const data = await parseResponseJson(response)
 
     if (!response.ok) {
-      uploadError.value = data.message || 'Cannot upload image'
+      // Use message field if available, otherwise use error field or generic message
+      uploadError.value = data.message || data.error || 'Failed to upload image'
+
+      // Log more details for debugging
+      if (!response.ok) {
+        console.error('Upload failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          data: data,
+        })
+      }
       return
     }
 
     // Update the mission's image URL with the new path from backend
-    if (data.imagePath) {
+    if (data.imagePath && editingMission.value?.id) {
       editingMission.value.image = data.imagePath
-      // Update in missions array
-      const missionIndex = missions.value.findIndex((m) => m.id === editingMission.value?.id)
-      if (missionIndex !== -1) {
-        missions.value[missionIndex].image = data.imagePath
+      const missionsList = missions.value
+      if (missionsList) {
+        const missionIndex = missionsList.findIndex((m) => m.id === editingMission.value!.id)
+        if (missionIndex !== -1 && missionsList[missionIndex]) {
+          missionsList[missionIndex].image = data.imagePath
+        }
       }
     }
 
@@ -273,7 +322,7 @@ async function saveImage(): Promise<void> {
     }, 1500)
   } catch (err) {
     console.error('Upload error:', err)
-    uploadError.value = 'Cannot upload image'
+    uploadError.value = err instanceof Error ? err.message : 'An error occurred during upload'
   } finally {
     isUploading.value = false
   }
@@ -291,52 +340,66 @@ async function handleLogout(): Promise<void> {
     // Redirect to login page
     await router.push('/login')
   } catch (err) {
-    console.error('Logout failed:', err)
+    console.error('Logout error:', err)
   } finally {
     isLoading.value = false
   }
 }
 
+/**
+ * On component mount, load missions from JSON
+ */
 onMounted(() => {
   missions.value = loadMissions()
 })
 </script>
 
 <style scoped>
+:root {
+  --color-text: #333;
+  --color-text-dim: #666;
+  --color-bg: #f5f5f5;
+  --color-bg-raised: #ffffff;
+  --color-border: #e0e0e0;
+  --color-accent: #0ea5e9;
+  --radius: 8px;
+}
+
 .admin-container {
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  background: var(--color-bg);
 }
 
 .admin-header {
   background: var(--color-bg-raised);
   border-bottom: 1px solid var(--color-border);
-  padding: 20px;
+  padding: 20px 0;
 }
 
 .header-content {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 0 20px;
 }
 
 .admin-title {
+  margin: 0;
   font-size: 28px;
   font-weight: 700;
-  margin: 0;
   color: var(--color-text);
 }
 
 .logout-btn {
-  padding: 10px 20px;
-  background: var(--color-text);
-  color: var(--color-bg);
+  background: var(--color-accent);
+  color: white;
   border: none;
-  border-radius: var(--radius);
+  padding: 10px 20px;
+  border-radius: 6px;
   font-weight: 600;
+  font-size: 14px;
   cursor: pointer;
   transition: opacity 0.2s ease;
 }

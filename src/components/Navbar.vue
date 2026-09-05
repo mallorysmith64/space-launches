@@ -2,8 +2,7 @@
   <header class="nav">
     <div class="nav__inner container">
       <router-link to="/" class="nav__brand" @click="closeMenu">
-        <span class="nav__brand-mark">SX</span>
-        <span class="nav__brand-text">SPACEX <span class="dim">// MISSIONS</span></span>
+        <span class="nav__brand-text">SpaceX Launches <span class="dim"></span></span>
       </router-link>
 
       <button
@@ -69,12 +68,8 @@ const links = computed(() => {
   right: 0;
   height: var(--nav-height);
   z-index: 100;
-  /* Transparent background with subtle blur for glass effect */
-  background: rgba(10, 13, 18, 0.25);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  /* Very subtle border that blends with content */
-  border-bottom: 1px solid rgba(79, 209, 255, 0.1);
+  /* Fully transparent - background image shows through */
+  background: transparent;
 }
 
 .nav__inner {
@@ -82,6 +77,7 @@ const links = computed(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 0 2.4em;
 }
 
 .nav__brand {
@@ -119,7 +115,10 @@ const links = computed(() => {
   font-size: 13px;
   letter-spacing: 0.08em;
   color: var(--color-text);
-  text-shadow: 0 0 20px rgba(79, 209, 255, 0.15);
+  /* Enhanced text shadow for better contrast against background image */
+  text-shadow:
+    0 2px 12px rgba(0, 0, 0, 0.6),
+    0 0 20px rgba(79, 209, 255, 0.2);
 }
 
 .nav__brand-text .dim {
@@ -144,17 +143,23 @@ const links = computed(() => {
     color 0.15s ease,
     border-color 0.15s ease,
     text-shadow 0.15s ease;
+  /* Text shadow for visibility against background */
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
 }
 
 .nav__link:hover {
   color: var(--color-text);
-  text-shadow: 0 0 12px rgba(79, 209, 255, 0.3);
+  text-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.5),
+    0 0 12px rgba(79, 209, 255, 0.3);
 }
 
 .nav__link.router-link-exact-active {
   color: var(--color-accent);
   border-bottom-color: var(--color-accent);
-  text-shadow: 0 0 12px rgba(255, 106, 61, 0.3);
+  text-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.5),
+    0 0 12px rgba(255, 106, 61, 0.3);
 }
 
 .nav__toggle {
@@ -227,6 +232,7 @@ const links = computed(() => {
     flex-direction: column;
     align-items: flex-start;
     gap: 0;
+    /* Mobile menu still has a background for readability */
     background: rgba(18, 22, 31, 0.95);
     backdrop-filter: blur(12px);
     border-bottom: 1px solid rgba(79, 209, 255, 0.1);
@@ -243,6 +249,7 @@ const links = computed(() => {
     width: 100%;
     padding: 14px 24px;
     border-bottom: 1px solid rgba(79, 209, 255, 0.05);
+    text-shadow: none;
   }
 }
 </style>
