@@ -6,11 +6,7 @@ import MissionGallery from '../components/MissionGallery.vue'
   <section class="hero">
     <div class="container hero__inner">
       <p class="eyebrow">Mission control</p>
-      <h1 class="hero__title">Every SpaceX launch,<br />tracked in one feed.</h1>
-      <p class="section-lede">
-        Live status, mission patches, and vehicle data for every flight — past, present, and
-        upcoming.
-      </p>
+      <h1 class="hero_title">Every SpaceX launch,<br />tracked in one feed</h1>
     </div>
   </section>
 
@@ -27,7 +23,7 @@ import MissionGallery from '../components/MissionGallery.vue'
   max-width: 720px;
 }
 
-.hero__title {
+.hero_title {
   margin-top: 14px;
   font-size: clamp(34px, 5vw, 56px);
   font-weight: 700;
