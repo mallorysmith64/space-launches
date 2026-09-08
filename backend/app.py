@@ -1,4 +1,5 @@
 import os
+import uuid
 from flask import Flask, jsonify, request, session, redirect, url_for, send_from_directory
 from flask_cors import CORS
 from functools import wraps
@@ -324,6 +325,126 @@ def upload_image():
         return jsonify({
             'status': 'error',
             'message': 'An error occurred while updating the mission'
+        }), 500
+
+@app.route("/api/admin/create-mission", methods=["POST"])
+@login_required
+def create_mission():
+    """
+    Create a new mission with an uploaded image.
+
+    Expected multipart/form-data:
+    - file: JPEG image, required, max 5MB
+    - title: mission title, required
+    - date: mission date, required
+    - rocketType: rocket type, required
+    - missionType: mission type, required
+    - description: mission description, required
+
+    All text fields and the image are required. The image is saved into
+    /src/images (same folder used for edits) and the mission is appended
+    to the mission data JSON file.
+    """
+    try:
+        title = request.form.get('title', '').strip()
+        date = request.form.get('date', '').strip()
+        rocket_type = request.form.get('rocketType', '').strip()
+        mission_type = request.form.get('missionType', '').strip()
+        description = request.form.get('description', '').strip()
+
+        # Validate required text fields
+        missing_fields = []
+        if not title:
+            missing_fields.append('title')
+        if not date:
+            missing_fields.append('date')
+        if not rocket_type:
+            missing_fields.append('rocketType')
+        if not mission_type:
+            missing_fields.append('missionType')
+        if not description:
+            missing_fields.append('description')
+
+        if missing_fields:
+            return jsonify({
+                'status': 'error',
+                'message': f"Missing required field(s): {', '.join(missing_fields)}"
+            }), 400
+
+        # Validate the image is present
+        if 'file' not in request.files or request.files['file'].filename == '':
+            return jsonify({
+                'status': 'error',
+                'message': 'An image is required'
+            }), 400
+
+        file = request.files['file']
+
+        # Validate file type
+        if not allowed_file(file.filename):
+            return jsonify({
+                'status': 'error',
+                'message': 'Only JPEG files are allowed'
+            }), 400
+
+        # Validate file size (Flask won't let it exceed MAX_CONTENT_LENGTH, but double-check)
+        file.seek(0, os.SEEK_END)
+        file_size = file.tell()
+        file.seek(0)
+
+        if file_size > MAX_FILE_SIZE:
+            return jsonify({
+                'status': 'error',
+                'message': 'File size must be under 5MB'
+            }), 400
+
+        # Generate a safe filename from the title and save the image to /src/images
+        filename = generate_filename_from_title(title)
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
+        if os.path.exists(filepath):
+            return jsonify({
+                'status': 'error',
+                'message': 'A mission with a very similar title already has an image saved. Please use a more unique title.'
+            }), 400
+
+        file.save(filepath)
+        image_path = f'/src/images/{filename}'
+
+        # Build the new mission entry
+        new_mission = {
+            'id': str(uuid.uuid4()),
+            'name': title,
+            'date': date,
+            'description': description,
+            'image': image_path,
+            'rocketName': rocket_type,
+            'missionType': mission_type
+        }
+
+        # Append to the mission data JSON file
+        json_path = get_json_path()
+        with open(json_path, 'r', encoding='utf-8') as f:
+            missions = json.load(f)
+
+        missions.append(new_mission)
+
+        with open(json_path, 'w', encoding='utf-8') as f:
+            json.dump(missions, f, indent=2, ensure_ascii=False)
+
+        print(f"Created new mission: {title}")
+
+        return jsonify({
+            'status': 'success',
+            'message': 'Mission successfully created',
+            'mission': new_mission
+        }), 201
+
+    except Exception as e:
+        print(f"Error creating mission: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': 'An error occurred while creating the mission'
         }), 500
 
 @app.route("/api/admin/logout", methods=["GET"])

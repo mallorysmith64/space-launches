@@ -203,7 +203,7 @@
           <!-- Image Upload -->
           <div class="modal__upload-section">
             <label for="new-image-input" class="modal__file-label">
-              Choose JPEG Image (Max 5MB)
+              Choose JPEG Image (Max 5MB) <span class="modal__required">*</span>
             </label>
             <input
               id="new-image-input"
@@ -221,77 +221,109 @@
             </div>
 
             <!-- Error Message -->
-            <div v-if="newUploadError" class="modal__error">
-              {{ newUploadError }}
-            </div>
+            <p v-if="newUploadError" class="modal__field-error">{{ newUploadError }}</p>
           </div>
 
           <!-- Title -->
           <div class="modal__title-section">
-            <label for="new-title-input" class="modal__title-label">Mission Title</label>
+            <label for="new-title-input" class="modal__title-label">
+              Mission Title <span class="modal__required">*</span>
+            </label>
             <input
               id="new-title-input"
               v-model="newTitle"
               type="text"
               class="modal__title-input"
               placeholder="Enter mission title"
+              @input="newTitleError = ''"
             />
+            <p v-if="newTitleError" class="modal__field-error">{{ newTitleError }}</p>
           </div>
 
           <!-- Date -->
           <div class="modal__date-section">
-            <label for="new-date-input" class="modal__date-label">Mission Date</label>
+            <label for="new-date-input" class="modal__date-label">
+              Mission Date <span class="modal__required">*</span>
+            </label>
             <input
               id="new-date-input"
               v-model="newDate"
               type="text"
               class="modal__date-input"
               placeholder="Enter mission date (e.g., January 15, 2024)"
+              @input="newDateError = ''"
             />
+            <p v-if="newDateError" class="modal__field-error">{{ newDateError }}</p>
           </div>
 
           <!-- Rocket Type -->
           <div class="modal__rocket-type-section">
-            <label for="new-rocket-type-input" class="modal__rocket-type-label">Rocket Type</label>
+            <label for="new-rocket-type-input" class="modal__rocket-type-label">
+              Rocket Type <span class="modal__required">*</span>
+            </label>
             <input
               id="new-rocket-type-input"
               v-model="newRocketType"
               type="text"
               class="modal__rocket-type-input"
               placeholder="Enter rocket type (e.g., Falcon 9, Falcon Heavy)"
+              @input="newRocketTypeError = ''"
             />
+            <p v-if="newRocketTypeError" class="modal__field-error">{{ newRocketTypeError }}</p>
           </div>
 
           <!-- Mission Type -->
           <div class="modal__mission-type-section">
-            <label for="new-mission-type-input" class="modal__mission-type-label"
-              >Mission Type</label
-            >
+            <label for="new-mission-type-input" class="modal__mission-type-label">
+              Mission Type <span class="modal__required">*</span>
+            </label>
             <input
               id="new-mission-type-input"
               v-model="newMissionType"
               type="text"
               class="modal__mission-type-input"
               placeholder="Enter mission type (e.g., Resupply, Crewed, Science)"
+              @input="newMissionTypeError = ''"
             />
+            <p v-if="newMissionTypeError" class="modal__field-error">{{ newMissionTypeError }}</p>
           </div>
 
           <!-- Description -->
           <div class="modal__description-section">
-            <label for="new-description-input" class="modal__description-label">Description</label>
+            <label for="new-description-input" class="modal__description-label">
+              Description <span class="modal__required">*</span>
+            </label>
             <textarea
               id="new-description-input"
               v-model="newDescription"
               class="modal__description-input"
               placeholder="Enter mission description"
               rows="4"
+              @input="newDescriptionError = ''"
             ></textarea>
+            <p v-if="newDescriptionError" class="modal__field-error">{{ newDescriptionError }}</p>
           </div>
+
+          <!-- Form-level Error / Success -->
+          <div v-if="newSaveError" class="modal__error">{{ newSaveError }}</div>
+          <div v-if="newSaveSuccess" class="modal__success">{{ newSaveSuccess }}</div>
         </div>
 
         <div class="modal__footer">
-          <button @click="closeAddModal" class="modal__btn modal__btn--cancel">Cancel</button>
-          <button @click="closeAddModal" class="modal__btn modal__btn--save">Save</button>
+          <button
+            @click="closeAddModal"
+            class="modal__btn modal__btn--cancel"
+            :disabled="isCreating"
+          >
+            Cancel
+          </button>
+          <button
+            @click="saveNewMission"
+            class="modal__btn modal__btn--save"
+            :disabled="isCreating"
+          >
+            {{ isCreating ? 'Saving...' : 'Save' }}
+          </button>
         </div>
       </div>
     </div>
@@ -317,6 +349,7 @@ interface ApiResponse {
   message?: string
   imagePath?: string
   error?: string
+  mission?: Mission
 }
 
 // API Base URL - point to Flask backend on port 5000
@@ -352,6 +385,18 @@ const newSelectedFile = ref<File | null>(null)
 const newPreviewUrl = ref('')
 const newUploadError = ref('')
 const newFileInput = ref<HTMLInputElement | undefined>(undefined)
+
+// Add New Mission per-field validation errors
+const newTitleError = ref('')
+const newDateError = ref('')
+const newRocketTypeError = ref('')
+const newMissionTypeError = ref('')
+const newDescriptionError = ref('')
+
+// Add New Mission save state
+const isCreating = ref(false)
+const newSaveError = ref('')
+const newSaveSuccess = ref('')
 
 /**
  * Loads missions straight from the bundled JSON, keeping only one mission per
@@ -427,12 +472,18 @@ function openAddModal(): void {
   newSelectedFile.value = null
   newPreviewUrl.value = ''
   newUploadError.value = ''
+  newTitleError.value = ''
+  newDateError.value = ''
+  newRocketTypeError.value = ''
+  newMissionTypeError.value = ''
+  newDescriptionError.value = ''
+  newSaveError.value = ''
+  newSaveSuccess.value = ''
   showAddModal.value = true
 }
 
 /**
  * Closes the Add New Mission modal and resets its fields
- * Note: no save/create logic wired up yet
  */
 function closeAddModal(): void {
   showAddModal.value = false
@@ -444,6 +495,13 @@ function closeAddModal(): void {
   newSelectedFile.value = null
   newPreviewUrl.value = ''
   newUploadError.value = ''
+  newTitleError.value = ''
+  newDateError.value = ''
+  newRocketTypeError.value = ''
+  newMissionTypeError.value = ''
+  newDescriptionError.value = ''
+  newSaveError.value = ''
+  newSaveSuccess.value = ''
   if (newFileInput.value) {
     newFileInput.value.value = ''
   }
@@ -485,6 +543,107 @@ function onNewFileSelected(event: Event): void {
   reader.readAsDataURL(file)
 
   newSelectedFile.value = file
+}
+
+/**
+ * Validates all required fields for the Add New Mission form.
+ * Sets the relevant error ref for any field that's missing and
+ * returns whether the form as a whole is valid.
+ */
+function validateAddForm(): boolean {
+  let isValid = true
+
+  if (!newTitle.value.trim()) {
+    newTitleError.value = 'Mission title is required'
+    isValid = false
+  }
+
+  if (!newDate.value.trim()) {
+    newDateError.value = 'Mission date is required'
+    isValid = false
+  }
+
+  if (!newRocketType.value.trim()) {
+    newRocketTypeError.value = 'Rocket type is required'
+    isValid = false
+  }
+
+  if (!newMissionType.value.trim()) {
+    newMissionTypeError.value = 'Mission type is required'
+    isValid = false
+  }
+
+  if (!newDescription.value.trim()) {
+    newDescriptionError.value = 'Description is required'
+    isValid = false
+  }
+
+  if (!newSelectedFile.value) {
+    newUploadError.value = 'An image is required'
+    isValid = false
+  }
+
+  return isValid
+}
+
+/**
+ * Validates and saves a new mission, uploading its image to /src/images
+ * and appending the mission to the backing JSON data.
+ */
+async function saveNewMission(): Promise<void> {
+  newSaveError.value = ''
+  newSaveSuccess.value = ''
+
+  if (!validateAddForm()) {
+    return
+  }
+
+  isCreating.value = true
+
+  try {
+    const formData = new FormData()
+    formData.append('file', newSelectedFile.value as File)
+    formData.append('title', newTitle.value.trim())
+    formData.append('date', newDate.value.trim())
+    formData.append('rocketType', newRocketType.value.trim())
+    formData.append('missionType', newMissionType.value.trim())
+    formData.append('description', newDescription.value.trim())
+
+    const response = await fetch(`${API_BASE_URL}/api/admin/create-mission`, {
+      method: 'POST',
+      body: formData,
+      credentials: 'include',
+    })
+
+    const data = await parseResponseJson(response)
+
+    if (!response.ok) {
+      newSaveError.value = data.message || data.error || 'Failed to create mission'
+      return
+    }
+
+    if (data.mission) {
+      missions.value.push(data.mission)
+    }
+
+    newSaveSuccess.value = 'Mission successfully created'
+
+    // Close modal after a short delay so the success message is visible
+    setTimeout(() => {
+      closeAddModal()
+    }, 1200)
+  } catch (err) {
+    console.error('Create mission error:', err)
+    if (err instanceof TypeError) {
+      newSaveError.value =
+        'Network error: Cannot connect to server. Make sure the backend is running on http://localhost:5000'
+    } else {
+      newSaveError.value =
+        err instanceof Error ? err.message : 'An error occurred while creating the mission'
+    }
+  } finally {
+    isCreating.value = false
+  }
 }
 
 /**
@@ -1029,6 +1188,16 @@ onMounted(() => {
 
 .modal__new-preview {
   margin-top: 20px;
+}
+
+.modal__required {
+  color: #dc2626;
+}
+
+.modal__field-error {
+  margin: 6px 0 0 0;
+  color: #dc2626;
+  font-size: 13px;
 }
 
 .modal__error {

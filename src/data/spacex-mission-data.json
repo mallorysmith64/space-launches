@@ -277,5 +277,14 @@
     "image": "/src/images/Starship_Integrated_Flight_Test_6.jpeg",
     "description": "The sixth integrated flight test featured a relit Raptor engine demonstration in space and further refinements to Ship reentry and splashdown, though the booster was diverted to a controlled ocean landing.",
     "missionType": "Development Flight"
+  },
+  {
+    "id": "1a86b054-71e6-43ee-a202-5e1eabdb53a4",
+    "name": "Add new",
+    "date": "Janurary 1, 2026",
+    "description": "Add new description",
+    "image": "/src/images/add-new.jpeg",
+    "rocketName": "New Rocket",
+    "missionType": "New Mission"
   }
 ]
