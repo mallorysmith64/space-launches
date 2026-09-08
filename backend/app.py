@@ -427,7 +427,7 @@ def create_mission():
         with open(json_path, 'r', encoding='utf-8') as f:
             missions = json.load(f)
 
-        missions.append(new_mission)
+        missions.insert(0, new_mission)
 
         with open(json_path, 'w', encoding='utf-8') as f:
             json.dump(missions, f, indent=2, ensure_ascii=False)

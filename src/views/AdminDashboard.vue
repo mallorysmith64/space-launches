@@ -623,7 +623,7 @@ async function saveNewMission(): Promise<void> {
     }
 
     if (data.mission) {
-      missions.value.push(data.mission)
+      missions.value.unshift(data.mission)
     }
 
     newSaveSuccess.value = 'Mission successfully created'
