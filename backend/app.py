@@ -68,13 +68,14 @@ def get_json_path():
     """Get the path to the mission data JSON file"""
     return os.path.join(os.path.dirname(__file__), '..', 'src', 'data', 'spacex-mission-data.json')
 
-def update_mission_json(mission_id, new_image_path):
+def update_mission_json(mission_id, new_image_path=None, new_title=None):
     """
-    Update the mission's image path in the JSON data file
+    Update the mission's image path and/or title in the JSON data file
     
     Args:
         mission_id: The mission ID to find and update
-        new_image_path: The new image path to set
+        new_image_path: The new image path to set (optional)
+        new_title: The new mission title to set (optional)
     
     Returns:
         True if successful, False otherwise
@@ -90,7 +91,10 @@ def update_mission_json(mission_id, new_image_path):
         updated = False
         for mission in missions:
             if mission.get('id') == mission_id:
-                mission['image'] = new_image_path
+                if new_image_path:
+                    mission['image'] = new_image_path
+                if new_title:
+                    mission['name'] = new_title
                 updated = True
                 break
         
@@ -102,7 +106,12 @@ def update_mission_json(mission_id, new_image_path):
         with open(json_path, 'w', encoding='utf-8') as f:
             json.dump(missions, f, indent=2, ensure_ascii=False)
         
-        print(f"Updated mission {mission_id} with new image path: {new_image_path}")
+        updates = []
+        if new_image_path:
+            updates.append(f"image path: {new_image_path}")
+        if new_title:
+            updates.append(f"title: {new_title}")
+        print(f"Updated mission {mission_id} with new {', '.join(updates)}")
         return True
     
     except Exception as e:
@@ -170,83 +179,111 @@ def admin_dashboard():
 @login_required
 def upload_image():
     """
-    Handle image upload for missions
+    Handle image upload and/or title update for missions
     
     Expected form data:
-    - file: image file (JPEG only)
-    - missionId: mission ID
-    - missionTitle: mission title (used to generate filename)
+    - file: image file (JPEG only, optional)
+    - missionId: mission ID (required)
+    - missionTitle: original mission title (used to generate old filename for deletion)
+    - newTitle: new mission title (optional)
+    
+    At least one of 'file' or 'newTitle' must be provided.
     """
     try:
-        # Check if file is in request
-        if 'file' not in request.files:
-            return jsonify({
-                'status': 'error',
-                'message': 'Cannot upload image'
-            }), 400
-        
-        file = request.files['file']
-        mission_title = request.form.get('missionTitle', '')
-        
-        # Check if file is empty
-        if file.filename == '':
-            return jsonify({
-                'status': 'error',
-                'message': 'Cannot upload image'
-            }), 400
-        
-        # Validate file type
-        if not allowed_file(file.filename):
-            return jsonify({
-                'status': 'error',
-                'message': 'Cannot upload image'
-            }), 400
-        
-        # Check file size (Flask won't let it exceed MAX_CONTENT_LENGTH)
-        file.seek(0, os.SEEK_END)
-        file_size = file.tell()
-        file.seek(0)
-        
-        if file_size > MAX_FILE_SIZE:
-            return jsonify({
-                'status': 'error',
-                'message': 'Cannot upload image'
-            }), 400
-        
-        # Delete old image if exists
-        if mission_title:
-            delete_old_image(mission_title)
-        
-        # Generate safe filename from mission title
-        filename = generate_filename_from_title(mission_title)
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        
-        # Save the file
-        file.save(filepath)
-        
-        # Return the relative path for the frontend to use (matches the
-        # /src/images/... convention already used by every mission entry)
-        image_path = f'/src/images/{filename}'
-        
-        # Update the mission JSON with the new image path
         mission_id = request.form.get('missionId', '')
-        if mission_id:
-            json_updated = update_mission_json(mission_id, image_path)
-            if not json_updated:
-                print(f"Warning: JSON update failed for mission {mission_id}, but image was saved")
+        mission_title = request.form.get('missionTitle', '')
+        new_title = request.form.get('newTitle', '')
+        
+        # Validate that we have a mission ID
+        if not mission_id:
+            return jsonify({
+                'status': 'error',
+                'message': 'Mission ID is required'
+            }), 400
+        
+        # Check if at least one update is being made
+        has_file = 'file' in request.files and request.files['file'].filename != ''
+        has_new_title = new_title and new_title.strip()
+        
+        if not has_file and not has_new_title:
+            return jsonify({
+                'status': 'error',
+                'message': 'Either an image file or new title must be provided'
+            }), 400
+        
+        image_path = None
+        
+        # Handle image upload if provided
+        if has_file:
+            file = request.files['file']
+            
+            # Validate file type
+            if not allowed_file(file.filename):
+                return jsonify({
+                    'status': 'error',
+                    'message': 'Only JPEG files are allowed'
+                }), 400
+            
+            # Check file size (Flask won't let it exceed MAX_CONTENT_LENGTH)
+            file.seek(0, os.SEEK_END)
+            file_size = file.tell()
+            file.seek(0)
+            
+            if file_size > MAX_FILE_SIZE:
+                return jsonify({
+                    'status': 'error',
+                    'message': 'File size must be under 5MB'
+                }), 400
+            
+            # Delete old image if exists
+            if mission_title:
+                delete_old_image(mission_title)
+            
+            # Use new title for filename if provided, otherwise use original title
+            filename_title = new_title if new_title and new_title.strip() else mission_title
+            
+            # Generate safe filename from mission title
+            filename = generate_filename_from_title(filename_title)
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            
+            # Save the file
+            file.save(filepath)
+            
+            # Return the relative path for the frontend to use (matches the
+            # /src/images/... convention already used by every mission entry)
+            image_path = f'/src/images/{filename}'
+        
+        # Update the mission JSON with the new values
+        json_updated = update_mission_json(mission_id, new_image_path=image_path, new_title=new_title if new_title else None)
+        
+        if not json_updated:
+            print(f"Warning: JSON update failed for mission {mission_id}")
+            # Still return success if file was saved, but let frontend know JSON update failed
+            if has_file:
+                return jsonify({
+                    'status': 'warning',
+                    'message': 'Image saved but database update failed',
+                    'imagePath': image_path,
+                    'filename': filename if has_file else None
+                }), 200
+            else:
+                return jsonify({
+                    'status': 'error',
+                    'message': 'Failed to update mission'
+                }), 500
         
         return jsonify({
             'status': 'success',
-            'message': 'Image successfully updated',
+            'message': 'Mission successfully updated',
             'imagePath': image_path,
-            'filename': filename
+            'filename': filename if has_file else None
         }), 200
     
     except Exception as e:
-        print(f"Error uploading image: {e}")
+        print(f"Error updating mission: {e}")
         return jsonify({
             'status': 'error',
-            'message': 'Cannot upload image'
+            'message': 'An error occurred while updating the mission'
         }), 500
 
 @app.route("/api/admin/logout", methods=["GET"])
