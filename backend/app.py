@@ -447,6 +447,75 @@ def create_mission():
             'message': 'An error occurred while creating the mission'
         }), 500
 
+@app.route("/api/admin/delete-mission", methods=["POST"])
+@login_required
+def delete_mission():
+    """
+    Delete a mission by ID.
+
+    Removes the mission from the mission data JSON file and deletes its
+    associated image from /src/images if one exists.
+
+    Expected JSON body:
+    - missionId: the ID of the mission to delete (required)
+    """
+    try:
+        data = request.get_json(silent=True) or {}
+        mission_id = str(data.get('missionId', '')).strip()
+
+        if not mission_id:
+            return jsonify({
+                'status': 'error',
+                'message': 'Mission ID is required'
+            }), 400
+
+        json_path = get_json_path()
+        with open(json_path, 'r', encoding='utf-8') as f:
+            missions = json.load(f)
+
+        mission_to_delete = None
+        remaining_missions = []
+        for mission in missions:
+            if mission.get('id') == mission_id:
+                mission_to_delete = mission
+            else:
+                remaining_missions.append(mission)
+
+        if mission_to_delete is None:
+            return jsonify({
+                'status': 'error',
+                'message': 'Mission not found'
+            }), 404
+
+        # Delete the associated image file based on its stored path,
+        # so renamed/edited missions still clean up the right file
+        image_path = mission_to_delete.get('image', '')
+        if image_path:
+            filename = os.path.basename(image_path)
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            if os.path.exists(filepath):
+                try:
+                    os.remove(filepath)
+                except Exception as e:
+                    print(f"Error deleting image file {filename}: {e}")
+
+        with open(json_path, 'w', encoding='utf-8') as f:
+            json.dump(remaining_missions, f, indent=2, ensure_ascii=False)
+
+        print(f"Deleted mission {mission_id}")
+
+        return jsonify({
+            'status': 'success',
+            'message': 'Mission successfully deleted'
+        }), 200
+
+    except Exception as e:
+        print(f"Error deleting mission: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': 'An error occurred while deleting the mission'
+        }), 500
+
 @app.route("/api/admin/logout", methods=["GET"])
 def admin_logout():
     """Logout endpoint"""

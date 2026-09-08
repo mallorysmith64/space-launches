@@ -27,21 +27,49 @@
             decoding="async"
           />
           <div class="mission-card__rocket-badge">{{ mission.rocketName }}</div>
-          <button @click="openEditModal(mission)" class="mission-card__edit-btn" title="Edit Image">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
+          <div class="mission-card__action-buttons">
+            <button
+              @click="openEditModal(mission)"
+              class="mission-card__edit-btn"
+              title="Edit Mission"
             >
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-            </svg>
-          </button>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+              </svg>
+            </button>
+            <button
+              @click="openDeleteModal(mission)"
+              class="mission-card__delete-btn"
+              title="Delete Mission"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                <path d="M10 11v6"></path>
+                <path d="M14 11v6"></path>
+                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+              </svg>
+            </button>
+          </div>
         </div>
         <div class="mission-card__body">
           <h3 class="mission-card__title">{{ mission.name }}</h3>
@@ -327,6 +355,42 @@
         </div>
       </div>
     </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div v-if="showDeleteModal" class="modal-overlay" @click.self="closeDeleteModal">
+      <div class="modal modal--confirm">
+        <div class="modal__header">
+          <h2>Delete Mission</h2>
+          <button @click="closeDeleteModal" class="modal__close-btn">✕</button>
+        </div>
+
+        <div class="modal__body">
+          <p class="modal__confirm-text">
+            Are you sure you want to delete
+            <strong>{{ missionToDelete?.name }}</strong
+            >? This action cannot be undone.
+          </p>
+          <div v-if="deleteError" class="modal__error">{{ deleteError }}</div>
+        </div>
+
+        <div class="modal__footer">
+          <button
+            @click="closeDeleteModal"
+            class="modal__btn modal__btn--cancel"
+            :disabled="isDeleting"
+          >
+            Cancel
+          </button>
+          <button
+            @click="confirmDeleteMission"
+            class="modal__btn modal__btn--delete"
+            :disabled="isDeleting"
+          >
+            {{ isDeleting ? 'Deleting...' : 'Delete' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -397,6 +461,12 @@ const newDescriptionError = ref('')
 const isCreating = ref(false)
 const newSaveError = ref('')
 const newSaveSuccess = ref('')
+
+// Delete Mission modal state
+const showDeleteModal = ref(false)
+const missionToDelete = ref<Mission | null>(null)
+const isDeleting = ref(false)
+const deleteError = ref('')
 
 /**
  * Loads missions straight from the bundled JSON, keeping only one mission per
@@ -643,6 +713,65 @@ async function saveNewMission(): Promise<void> {
     }
   } finally {
     isCreating.value = false
+  }
+}
+
+/**
+ * Opens the delete confirmation modal for a specific mission
+ */
+function openDeleteModal(mission: Mission): void {
+  missionToDelete.value = mission
+  deleteError.value = ''
+  showDeleteModal.value = true
+}
+
+/**
+ * Closes the delete confirmation modal and resets its state
+ */
+function closeDeleteModal(): void {
+  showDeleteModal.value = false
+  missionToDelete.value = null
+  deleteError.value = ''
+}
+
+/**
+ * Confirms deletion of the selected mission: removes it from the backend
+ * (JSON data + image file) and, on success, from the local missions list.
+ */
+async function confirmDeleteMission(): Promise<void> {
+  if (!missionToDelete.value) return
+
+  isDeleting.value = true
+  deleteError.value = ''
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/admin/delete-mission`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ missionId: missionToDelete.value.id }),
+    })
+
+    const data = await parseResponseJson(response)
+
+    if (!response.ok) {
+      deleteError.value = data.message || data.error || 'Failed to delete mission'
+      return
+    }
+
+    missions.value = missions.value.filter((m) => m.id !== missionToDelete.value!.id)
+    closeDeleteModal()
+  } catch (err) {
+    console.error('Delete mission error:', err)
+    if (err instanceof TypeError) {
+      deleteError.value =
+        'Network error: Cannot connect to server. Make sure the backend is running on http://localhost:5000'
+    } else {
+      deleteError.value =
+        err instanceof Error ? err.message : 'An error occurred while deleting the mission'
+    }
+  } finally {
+    isDeleting.value = false
   }
 }
 
@@ -992,10 +1121,21 @@ onMounted(() => {
   backdrop-filter: blur(4px);
 }
 
-.mission-card__edit-btn {
+.mission-card__action-buttons {
   position: absolute;
   top: 8px;
   right: 8px;
+  display: flex;
+  gap: 6px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.mission-card__image-wrapper:hover .mission-card__action-buttons {
+  opacity: 1;
+}
+
+.mission-card__edit-btn {
   background: rgba(10, 165, 233, 0.9);
   color: white;
   border: none;
@@ -1003,18 +1143,30 @@ onMounted(() => {
   border-radius: 4px;
   cursor: pointer;
   transition: background 0.2s ease;
-  opacity: 0;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.mission-card__image-wrapper:hover .mission-card__edit-btn {
-  opacity: 1;
-}
-
 .mission-card__edit-btn:hover {
   background: rgba(10, 165, 233, 1);
+}
+
+.mission-card__delete-btn {
+  background: rgba(220, 38, 38, 0.9);
+  color: white;
+  border: none;
+  padding: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mission-card__delete-btn:hover {
+  background: rgba(220, 38, 38, 1);
 }
 
 .mission-card__body {
@@ -1093,6 +1245,17 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.modal--confirm {
+  max-width: 420px;
+}
+
+.modal__confirm-text {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--color-text);
 }
 
 .modal__header {
@@ -1254,6 +1417,15 @@ onMounted(() => {
 }
 
 .modal__btn--save:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.modal__btn--delete {
+  background: #dc2626;
+  color: white;
+}
+
+.modal__btn--delete:hover:not(:disabled) {
   opacity: 0.9;
 }
 

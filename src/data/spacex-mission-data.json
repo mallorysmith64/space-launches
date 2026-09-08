@@ -1,14 +1,5 @@
 [
   {
-    "id": "fbb0c584-188b-4a9a-827c-bf1a2bf757fd",
-    "name": "Top of Page",
-    "date": "Janurary 1, 2026",
-    "description": "Add new top of page",
-    "image": "/src/images/top-of-page.jpeg",
-    "rocketName": "New Rocket",
-    "missionType": "New Mission"
-  },
-  {
     "id": "falcon9-crs-29",
     "name": "CRS-29 Resupply Mission",
     "date": "November 26, 2023",
@@ -286,14 +277,5 @@
     "image": "/src/images/Starship_Integrated_Flight_Test_6.jpeg",
     "description": "The sixth integrated flight test featured a relit Raptor engine demonstration in space and further refinements to Ship reentry and splashdown, though the booster was diverted to a controlled ocean landing.",
     "missionType": "Development Flight"
-  },
-  {
-    "id": "1a86b054-71e6-43ee-a202-5e1eabdb53a4",
-    "name": "Add new",
-    "date": "Janurary 1, 2026",
-    "description": "Add new description",
-    "image": "/src/images/add-new.jpeg",
-    "rocketName": "New Rocket",
-    "missionType": "New Mission"
   }
 ]
