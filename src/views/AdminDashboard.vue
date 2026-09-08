@@ -110,18 +110,6 @@
             />
           </div>
 
-          <!-- Description Edit Section -->
-          <div class="modal__description-section">
-            <label for="description-input" class="modal__description-label">Description</label>
-            <textarea
-              id="description-input"
-              v-model="editingDescription"
-              class="modal__description-input"
-              placeholder="Enter mission description"
-              rows="4"
-            ></textarea>
-          </div>
-
           <!-- Date Edit Section -->
           <div class="modal__date-section">
             <label for="date-input" class="modal__date-label">Mission Date</label>
@@ -145,6 +133,30 @@
               placeholder="Enter rocket type (e.g., Falcon 9, Falcon Heavy)"
             />
           </div>
+
+          <!-- Mission Type Edit Section -->
+          <div class="modal__mission-type-section">
+            <label for="mission-type-input" class="modal__mission-type-label">Mission Type</label>
+            <input
+              id="mission-type-input"
+              v-model="editingMissionType"
+              type="text"
+              class="modal__mission-type-input"
+              placeholder="Enter mission type (e.g., Resupply, Crewed, Science)"
+            />
+          </div>
+
+          <!-- Description Edit Section -->
+          <div class="modal__description-section">
+            <label for="description-input" class="modal__description-label">Description</label>
+            <textarea
+              id="description-input"
+              v-model="editingDescription"
+              class="modal__description-input"
+              placeholder="Enter mission description"
+              rows="4"
+            ></textarea>
+          </div>
         </div>
 
         <div class="modal__footer">
@@ -163,7 +175,8 @@
                 editingTitle === editingMission?.name &&
                 editingDescription === editingMission?.description &&
                 editingDate === editingMission?.date &&
-                editingRocketType === editingMission?.rocketName) ||
+                editingRocketType === editingMission?.rocketName &&
+                editingMissionType === (editingMission?.missionType || '')) ||
               isUploading
             "
           >
@@ -210,6 +223,7 @@ const editingTitle = ref('')
 const editingDescription = ref('')
 const editingDate = ref('')
 const editingRocketType = ref('')
+const editingMissionType = ref('')
 const selectedFile = ref<File | null>(null)
 const previewUrl = ref('')
 const isUploading = ref(false)
@@ -251,6 +265,7 @@ function openEditModal(mission: Mission): void {
   editingDescription.value = mission.description
   editingDate.value = mission.date
   editingRocketType.value = mission.rocketName
+  editingMissionType.value = mission.missionType || ''
   showEditModal.value = true
   selectedFile.value = null
   previewUrl.value = ''
@@ -268,6 +283,7 @@ function closeEditModal(): void {
   editingDescription.value = ''
   editingDate.value = ''
   editingRocketType.value = ''
+  editingMissionType.value = ''
   selectedFile.value = null
   previewUrl.value = ''
   uploadError.value = ''
@@ -363,6 +379,7 @@ async function saveImage(): Promise<void> {
     formData.append('newDescription', editingDescription.value)
     formData.append('newDate', editingDate.value)
     formData.append('newRocketType', editingRocketType.value)
+    formData.append('newMissionType', editingMissionType.value)
 
     console.log('Sending update to backend:', {
       missionId: editingMission.value.id,
@@ -371,6 +388,7 @@ async function saveImage(): Promise<void> {
       newDescription: editingDescription.value,
       newDate: editingDate.value,
       newRocketType: editingRocketType.value,
+      newMissionType: editingMissionType.value,
     })
 
     // Use full API URL pointing to Flask backend on port 5000
@@ -1004,6 +1022,43 @@ onMounted(() => {
 }
 
 .modal__rocket-type-input::placeholder {
+  color: var(--color-text-dim);
+}
+
+.modal__mission-type-section {
+  margin-top: 20px;
+}
+
+.modal__mission-type-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.modal__mission-type-input {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+}
+
+.modal__mission-type-input:focus {
+  outline: none;
+  border-color: var(--color-cyan);
+  box-shadow: 0 0 0 2px rgba(79, 209, 255, 0.1);
+}
+
+.modal__mission-type-input::placeholder {
   color: var(--color-text-dim);
 }
 </style>
