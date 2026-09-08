@@ -10,6 +10,11 @@
       </div>
     </div>
 
+    <!-- Mission grid header with Add New action -->
+    <header class="mission-gallery__header">
+      <button @click="openAddModal" class="add-mission-btn" type="button">+ Add New Mission</button>
+    </header>
+
     <!-- Show missions grid -->
     <div v-if="missions.length > 0" class="mission-gallery__grid">
       <article v-for="mission in missions" :key="mission.id" class="mission-card">
@@ -185,6 +190,85 @@
         </div>
       </div>
     </div>
+
+    <!-- Add New Mission Modal -->
+    <div v-if="showAddModal" class="modal-overlay" @click.self="closeAddModal">
+      <div class="modal">
+        <div class="modal__header">
+          <h2>Add New Mission</h2>
+          <button @click="closeAddModal" class="modal__close-btn">✕</button>
+        </div>
+
+        <div class="modal__body">
+          <!-- Title -->
+          <div class="modal__title-section">
+            <label for="new-title-input" class="modal__title-label">Mission Title</label>
+            <input
+              id="new-title-input"
+              v-model="newTitle"
+              type="text"
+              class="modal__title-input"
+              placeholder="Enter mission title"
+            />
+          </div>
+
+          <!-- Date -->
+          <div class="modal__date-section">
+            <label for="new-date-input" class="modal__date-label">Mission Date</label>
+            <input
+              id="new-date-input"
+              v-model="newDate"
+              type="text"
+              class="modal__date-input"
+              placeholder="Enter mission date (e.g., January 15, 2024)"
+            />
+          </div>
+
+          <!-- Rocket Type -->
+          <div class="modal__rocket-type-section">
+            <label for="new-rocket-type-input" class="modal__rocket-type-label">Rocket Type</label>
+            <input
+              id="new-rocket-type-input"
+              v-model="newRocketType"
+              type="text"
+              class="modal__rocket-type-input"
+              placeholder="Enter rocket type (e.g., Falcon 9, Falcon Heavy)"
+            />
+          </div>
+
+          <!-- Mission Type -->
+          <div class="modal__mission-type-section">
+            <label for="new-mission-type-input" class="modal__mission-type-label"
+              >Mission Type</label
+            >
+            <input
+              id="new-mission-type-input"
+              v-model="newMissionType"
+              type="text"
+              class="modal__mission-type-input"
+              placeholder="Enter mission type (e.g., Resupply, Crewed, Science)"
+            />
+          </div>
+
+          <!-- Description -->
+          <div class="modal__description-section">
+            <label for="new-description-input" class="modal__description-label">Description</label>
+            <textarea
+              id="new-description-input"
+              v-model="newDescription"
+              class="modal__description-input"
+              placeholder="Enter mission description"
+              rows="4"
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="modal__footer">
+          <button @click="closeAddModal" class="modal__btn modal__btn--cancel">Cancel</button>
+          <button @click="closeAddModal" class="modal__btn modal__btn--save">Save</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -230,6 +314,14 @@ const isUploading = ref(false)
 const uploadError = ref('')
 const uploadSuccess = ref('')
 const fileInput = ref<HTMLInputElement | undefined>(undefined)
+
+// Add New Mission modal state
+const showAddModal = ref(false)
+const newTitle = ref('')
+const newDate = ref('')
+const newRocketType = ref('')
+const newMissionType = ref('')
+const newDescription = ref('')
 
 /**
  * Loads missions straight from the bundled JSON, keeping only one mission per
@@ -291,6 +383,31 @@ function closeEditModal(): void {
   if (fileInput.value) {
     fileInput.value.value = ''
   }
+}
+
+/**
+ * Opens the Add New Mission modal with empty fields
+ */
+function openAddModal(): void {
+  newTitle.value = ''
+  newDate.value = ''
+  newRocketType.value = ''
+  newMissionType.value = ''
+  newDescription.value = ''
+  showAddModal.value = true
+}
+
+/**
+ * Closes the Add New Mission modal and resets its fields
+ * Note: no save/create logic wired up yet
+ */
+function closeAddModal(): void {
+  showAddModal.value = false
+  newTitle.value = ''
+  newDate.value = ''
+  newRocketType.value = ''
+  newMissionType.value = ''
+  newDescription.value = ''
 }
 
 /**
@@ -549,6 +666,30 @@ onMounted(() => {
   cursor: not-allowed;
 }
 
+.mission-gallery__header {
+  margin-top: 40px;
+  margin-left: 20px;
+  margin-right: 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.add-mission-btn {
+  background: var(--color-accent);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.add-mission-btn:hover {
+  opacity: 0.8;
+}
+
 .mission-gallery__status {
   margin-top: 32px;
   color: var(--color-text-dim);
@@ -556,7 +697,7 @@ onMounted(() => {
 }
 
 .mission-gallery__grid {
-  margin-top: 40px;
+  margin-top: 20px;
   margin-left: 20px;
   margin-right: 20px;
   display: grid;
