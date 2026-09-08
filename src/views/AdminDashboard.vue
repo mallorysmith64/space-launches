@@ -54,7 +54,7 @@
     <div v-if="showEditModal" class="modal-overlay" @click.self="closeEditModal">
       <div class="modal">
         <div class="modal__header">
-          <h2>Update Image for {{ editingMission?.name }}</h2>
+          <h2>Update Mission</h2>
           <button @click="closeEditModal" class="modal__close-btn">✕</button>
         </div>
 
@@ -97,6 +97,30 @@
               {{ uploadSuccess }}
             </div>
           </div>
+
+          <!-- Title Edit Section -->
+          <div class="modal__title-section">
+            <label for="title-input" class="modal__title-label">Mission Title</label>
+            <input
+              id="title-input"
+              v-model="editingTitle"
+              type="text"
+              class="modal__title-input"
+              placeholder="Enter mission title"
+            />
+          </div>
+
+          <!-- Description Edit Section -->
+          <div class="modal__description-section">
+            <label for="description-input" class="modal__description-label">Description</label>
+            <textarea
+              id="description-input"
+              v-model="editingDescription"
+              class="modal__description-input"
+              placeholder="Enter mission description"
+              rows="4"
+            ></textarea>
+          </div>
         </div>
 
         <div class="modal__footer">
@@ -110,9 +134,14 @@
           <button
             @click="saveImage"
             class="modal__btn modal__btn--save"
-            :disabled="!selectedFile || isUploading"
+            :disabled="
+              (!selectedFile &&
+                editingTitle === editingMission?.name &&
+                editingDescription === editingMission?.description) ||
+              isUploading
+            "
           >
-            {{ isUploading ? 'Uploading...' : 'Save' }}
+            {{ isUploading ? 'Updating...' : 'Save' }}
           </button>
         </div>
       </div>
@@ -151,6 +180,8 @@ const isLoading = ref(false)
 // Edit modal state
 const showEditModal = ref(false)
 const editingMission = ref<Mission | null>(null)
+const editingTitle = ref('')
+const editingDescription = ref('')
 const selectedFile = ref<File | null>(null)
 const previewUrl = ref('')
 const isUploading = ref(false)
@@ -188,6 +219,8 @@ function loadMissions(): Mission[] {
  */
 function openEditModal(mission: Mission): void {
   editingMission.value = mission
+  editingTitle.value = mission.name
+  editingDescription.value = mission.description
   showEditModal.value = true
   selectedFile.value = null
   previewUrl.value = ''
@@ -201,6 +234,8 @@ function openEditModal(mission: Mission): void {
 function closeEditModal(): void {
   showEditModal.value = false
   editingMission.value = null
+  editingTitle.value = ''
+  editingDescription.value = ''
   selectedFile.value = null
   previewUrl.value = ''
   uploadError.value = ''
@@ -276,10 +311,10 @@ async function parseResponseJson(response: Response): Promise<ApiResponse> {
 }
 
 /**
- * Saves image to backend and updates mission
+ * Saves image and/or title to backend and updates mission
  */
 async function saveImage(): Promise<void> {
-  if (!selectedFile.value || !editingMission.value) return
+  if (!editingMission.value) return
 
   isUploading.value = true
   uploadError.value = ''
@@ -287,9 +322,13 @@ async function saveImage(): Promise<void> {
 
   try {
     const formData = new FormData()
-    formData.append('file', selectedFile.value)
+    if (selectedFile.value) {
+      formData.append('file', selectedFile.value)
+    }
     formData.append('missionId', editingMission.value.id)
     formData.append('missionTitle', editingMission.value.name)
+    formData.append('newTitle', editingTitle.value)
+    formData.append('newDescription', editingDescription.value)
 
     // Use full API URL pointing to Flask backend on port 5000
     const response = await fetch(`${API_BASE_URL}/api/admin/upload-image`, {
@@ -316,14 +355,23 @@ async function saveImage(): Promise<void> {
       return
     }
 
-    // Update the mission's image URL with the new path from backend
-    if (data.imagePath && editingMission.value?.id) {
-      editingMission.value.image = data.imagePath
+    // Update the mission's image URL, title, and description with the new values
+    if (editingMission.value?.id) {
+      if (data.imagePath) {
+        editingMission.value.image = data.imagePath
+      }
+      editingMission.value.name = editingTitle.value
+      editingMission.value.description = editingDescription.value
+
       const missionsList = missions.value
       if (missionsList) {
         const missionIndex = missionsList.findIndex((m) => m.id === editingMission.value!.id)
         if (missionIndex !== -1 && missionsList[missionIndex]) {
-          missionsList[missionIndex].image = data.imagePath
+          if (data.imagePath) {
+            missionsList[missionIndex].image = data.imagePath
+          }
+          missionsList[missionIndex].name = editingTitle.value
+          missionsList[missionIndex].description = editingDescription.value
         }
       }
     }
@@ -751,5 +799,81 @@ onMounted(() => {
 .modal__btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.modal__title-section {
+  margin-bottom: 24px;
+}
+
+.modal__title-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.modal__title-input {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+}
+
+.modal__title-input:focus {
+  outline: none;
+  border-color: var(--color-cyan);
+  box-shadow: 0 0 0 2px rgba(79, 209, 255, 0.1);
+}
+
+.modal__title-input::placeholder {
+  color: var(--color-text-dim);
+}
+
+.modal__description-section {
+  margin-top: 20px;
+}
+
+.modal__description-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.modal__description-input {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  transition: border-color 0.2s ease;
+  resize: vertical;
+}
+
+.modal__description-input:focus {
+  outline: none;
+  border-color: var(--color-cyan);
+  box-shadow: 0 0 0 2px rgba(79, 209, 255, 0.1);
+}
+
+.modal__description-input::placeholder {
+  color: var(--color-text-dim);
 }
 </style>

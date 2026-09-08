@@ -5,7 +5,7 @@
     "date": "November 26, 2023",
     "rocketName": "Falcon 9",
     "image": "/src/images/crs29-resupply-mission.jpeg",
-    "description": "SpaceX's 29th resupply mission to the International Space Station, delivering cargo and experiments to support the crew aboard the ISS.",
+    "description": "SpaceX CRS-29, also known as SpX-29, is a Commercial Resupply Service mission to the International Space Station (ISS) launched on November 10, 2023.",
     "missionType": "Cargo Resupply"
   },
   {

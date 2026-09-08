@@ -68,14 +68,15 @@ def get_json_path():
     """Get the path to the mission data JSON file"""
     return os.path.join(os.path.dirname(__file__), '..', 'src', 'data', 'spacex-mission-data.json')
 
-def update_mission_json(mission_id, new_image_path=None, new_title=None):
+def update_mission_json(mission_id, new_image_path=None, new_title=None, new_description=None):
     """
-    Update the mission's image path and/or title in the JSON data file
+    Update the mission's image path, title, and/or description in the JSON data file
     
     Args:
         mission_id: The mission ID to find and update
         new_image_path: The new image path to set (optional)
         new_title: The new mission title to set (optional)
+        new_description: The new mission description to set (optional)
     
     Returns:
         True if successful, False otherwise
@@ -95,6 +96,8 @@ def update_mission_json(mission_id, new_image_path=None, new_title=None):
                     mission['image'] = new_image_path
                 if new_title:
                     mission['name'] = new_title
+                if new_description:
+                    mission['description'] = new_description
                 updated = True
                 break
         
@@ -111,6 +114,8 @@ def update_mission_json(mission_id, new_image_path=None, new_title=None):
             updates.append(f"image path: {new_image_path}")
         if new_title:
             updates.append(f"title: {new_title}")
+        if new_description:
+            updates.append(f"description: {new_description[:50]}...")
         print(f"Updated mission {mission_id} with new {', '.join(updates)}")
         return True
     
@@ -179,20 +184,22 @@ def admin_dashboard():
 @login_required
 def upload_image():
     """
-    Handle image upload and/or title update for missions
+    Handle image upload and/or mission data updates
     
     Expected form data:
     - file: image file (JPEG only, optional)
     - missionId: mission ID (required)
     - missionTitle: original mission title (used to generate old filename for deletion)
     - newTitle: new mission title (optional)
+    - newDescription: new mission description (optional)
     
-    At least one of 'file' or 'newTitle' must be provided.
+    At least one of 'file', 'newTitle', or 'newDescription' must be provided.
     """
     try:
         mission_id = request.form.get('missionId', '')
         mission_title = request.form.get('missionTitle', '')
         new_title = request.form.get('newTitle', '')
+        new_description = request.form.get('newDescription', '')
         
         # Validate that we have a mission ID
         if not mission_id:
@@ -204,11 +211,12 @@ def upload_image():
         # Check if at least one update is being made
         has_file = 'file' in request.files and request.files['file'].filename != ''
         has_new_title = new_title and new_title.strip()
+        has_new_description = new_description and new_description.strip()
         
-        if not has_file and not has_new_title:
+        if not has_file and not has_new_title and not has_new_description:
             return jsonify({
                 'status': 'error',
-                'message': 'Either an image file or new title must be provided'
+                'message': 'At least one update (image, title, or description) must be provided'
             }), 400
         
         image_path = None
@@ -254,7 +262,12 @@ def upload_image():
             image_path = f'/src/images/{filename}'
         
         # Update the mission JSON with the new values
-        json_updated = update_mission_json(mission_id, new_image_path=image_path, new_title=new_title if new_title else None)
+        json_updated = update_mission_json(
+            mission_id, 
+            new_image_path=image_path, 
+            new_title=new_title if new_title else None,
+            new_description=new_description if new_description else None
+        )
         
         if not json_updated:
             print(f"Warning: JSON update failed for mission {mission_id}")
