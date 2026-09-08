@@ -200,6 +200,32 @@
         </div>
 
         <div class="modal__body">
+          <!-- Image Upload -->
+          <div class="modal__upload-section">
+            <label for="new-image-input" class="modal__file-label">
+              Choose JPEG Image (Max 5MB)
+            </label>
+            <input
+              id="new-image-input"
+              ref="newFileInput"
+              type="file"
+              accept=".jpeg,.jpg"
+              class="modal__file-input"
+              @change="onNewFileSelected"
+            />
+
+            <!-- New Image Preview -->
+            <div v-if="newPreviewUrl" class="modal__new-preview">
+              <h3>Image Preview</h3>
+              <img :src="newPreviewUrl" :alt="'Preview'" class="modal__preview-image" />
+            </div>
+
+            <!-- Error Message -->
+            <div v-if="newUploadError" class="modal__error">
+              {{ newUploadError }}
+            </div>
+          </div>
+
           <!-- Title -->
           <div class="modal__title-section">
             <label for="new-title-input" class="modal__title-label">Mission Title</label>
@@ -322,6 +348,10 @@ const newDate = ref('')
 const newRocketType = ref('')
 const newMissionType = ref('')
 const newDescription = ref('')
+const newSelectedFile = ref<File | null>(null)
+const newPreviewUrl = ref('')
+const newUploadError = ref('')
+const newFileInput = ref<HTMLInputElement | undefined>(undefined)
 
 /**
  * Loads missions straight from the bundled JSON, keeping only one mission per
@@ -394,6 +424,9 @@ function openAddModal(): void {
   newRocketType.value = ''
   newMissionType.value = ''
   newDescription.value = ''
+  newSelectedFile.value = null
+  newPreviewUrl.value = ''
+  newUploadError.value = ''
   showAddModal.value = true
 }
 
@@ -408,6 +441,50 @@ function closeAddModal(): void {
   newRocketType.value = ''
   newMissionType.value = ''
   newDescription.value = ''
+  newSelectedFile.value = null
+  newPreviewUrl.value = ''
+  newUploadError.value = ''
+  if (newFileInput.value) {
+    newFileInput.value.value = ''
+  }
+}
+
+/**
+ * Handles file selection and generates preview for the Add New Mission modal
+ */
+function onNewFileSelected(event: Event): void {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+
+  newUploadError.value = ''
+
+  if (!file) return
+
+  // Validate file type
+  if (!file.type.includes('jpeg') && !file.type.includes('jpg')) {
+    newUploadError.value = 'Cannot upload image: Only JPEG files are allowed'
+    newSelectedFile.value = null
+    newPreviewUrl.value = ''
+    return
+  }
+
+  // Validate file size (5MB = 5242880 bytes)
+  const maxSize = 5 * 1024 * 1024
+  if (file.size > maxSize) {
+    newUploadError.value = 'Cannot upload image: File size must be under 5MB'
+    newSelectedFile.value = null
+    newPreviewUrl.value = ''
+    return
+  }
+
+  // Generate preview
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    newPreviewUrl.value = e.target?.result as string
+  }
+  reader.readAsDataURL(file)
+
+  newSelectedFile.value = file
 }
 
 /**
