@@ -955,8 +955,8 @@ async function handleLogout(): Promise<void> {
     // Clear auth token from localStorage (adjust key name if needed)
     localStorage.removeItem('authToken')
 
-    // Redirect to login page
-    await router.push('/login')
+    // Redirect to homepage
+    await router.push({ name: 'home' })
   } catch (err) {
     console.error('Logout error:', err)
   } finally {
