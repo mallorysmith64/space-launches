@@ -121,6 +121,30 @@
               rows="4"
             ></textarea>
           </div>
+
+          <!-- Date Edit Section -->
+          <div class="modal__date-section">
+            <label for="date-input" class="modal__date-label">Mission Date</label>
+            <input
+              id="date-input"
+              v-model="editingDate"
+              type="text"
+              class="modal__date-input"
+              placeholder="Enter mission date (e.g., January 15, 2024)"
+            />
+          </div>
+
+          <!-- Rocket Type Edit Section -->
+          <div class="modal__rocket-type-section">
+            <label for="rocket-type-input" class="modal__rocket-type-label">Rocket Type</label>
+            <input
+              id="rocket-type-input"
+              v-model="editingRocketType"
+              type="text"
+              class="modal__rocket-type-input"
+              placeholder="Enter rocket type (e.g., Falcon 9, Falcon Heavy)"
+            />
+          </div>
         </div>
 
         <div class="modal__footer">
@@ -137,7 +161,9 @@
             :disabled="
               (!selectedFile &&
                 editingTitle === editingMission?.name &&
-                editingDescription === editingMission?.description) ||
+                editingDescription === editingMission?.description &&
+                editingDate === editingMission?.date &&
+                editingRocketType === editingMission?.rocketName) ||
               isUploading
             "
           >
@@ -182,6 +208,8 @@ const showEditModal = ref(false)
 const editingMission = ref<Mission | null>(null)
 const editingTitle = ref('')
 const editingDescription = ref('')
+const editingDate = ref('')
+const editingRocketType = ref('')
 const selectedFile = ref<File | null>(null)
 const previewUrl = ref('')
 const isUploading = ref(false)
@@ -221,6 +249,8 @@ function openEditModal(mission: Mission): void {
   editingMission.value = mission
   editingTitle.value = mission.name
   editingDescription.value = mission.description
+  editingDate.value = mission.date
+  editingRocketType.value = mission.rocketName
   showEditModal.value = true
   selectedFile.value = null
   previewUrl.value = ''
@@ -236,6 +266,8 @@ function closeEditModal(): void {
   editingMission.value = null
   editingTitle.value = ''
   editingDescription.value = ''
+  editingDate.value = ''
+  editingRocketType.value = ''
   selectedFile.value = null
   previewUrl.value = ''
   uploadError.value = ''
@@ -329,6 +361,17 @@ async function saveImage(): Promise<void> {
     formData.append('missionTitle', editingMission.value.name)
     formData.append('newTitle', editingTitle.value)
     formData.append('newDescription', editingDescription.value)
+    formData.append('newDate', editingDate.value)
+    formData.append('newRocketType', editingRocketType.value)
+
+    console.log('Sending update to backend:', {
+      missionId: editingMission.value.id,
+      hasFile: !!selectedFile.value,
+      newTitle: editingTitle.value,
+      newDescription: editingDescription.value,
+      newDate: editingDate.value,
+      newRocketType: editingRocketType.value,
+    })
 
     // Use full API URL pointing to Flask backend on port 5000
     const response = await fetch(`${API_BASE_URL}/api/admin/upload-image`, {
@@ -339,6 +382,12 @@ async function saveImage(): Promise<void> {
 
     // Safely parse response as JSON with fallback
     const data = await parseResponseJson(response)
+
+    console.log('Response from backend:', {
+      status: response.status,
+      statusText: response.statusText,
+      data: data,
+    })
 
     if (!response.ok) {
       // Use message field if available, otherwise use error field or generic message
@@ -355,13 +404,14 @@ async function saveImage(): Promise<void> {
       return
     }
 
-    // Update the mission's image URL, title, and description with the new values
+    // Update the mission's image URL, title, description, and date with the new values
     if (editingMission.value?.id) {
       if (data.imagePath) {
         editingMission.value.image = data.imagePath
       }
       editingMission.value.name = editingTitle.value
       editingMission.value.description = editingDescription.value
+      editingMission.value.date = editingDate.value
 
       const missionsList = missions.value
       if (missionsList) {
@@ -372,19 +422,25 @@ async function saveImage(): Promise<void> {
           }
           missionsList[missionIndex].name = editingTitle.value
           missionsList[missionIndex].description = editingDescription.value
+          missionsList[missionIndex].date = editingDate.value
         }
       }
     }
 
-    uploadSuccess.value = 'Image successfully updated'
+    uploadSuccess.value = 'Mission successfully updated'
 
     // Close modal after 1.5 seconds
     setTimeout(() => {
       closeEditModal()
     }, 1500)
   } catch (err) {
-    console.error('Upload error:', err)
-    uploadError.value = err instanceof Error ? err.message : 'An error occurred during upload'
+    console.error('Upload error details:', err)
+    if (err instanceof TypeError) {
+      uploadError.value =
+        'Network error: Cannot connect to server. Make sure the backend is running on http://localhost:5000'
+    } else {
+      uploadError.value = err instanceof Error ? err.message : 'An error occurred during upload'
+    }
   } finally {
     isUploading.value = false
   }
@@ -874,6 +930,80 @@ onMounted(() => {
 }
 
 .modal__description-input::placeholder {
+  color: var(--color-text-dim);
+}
+
+.modal__date-section {
+  margin-top: 20px;
+}
+
+.modal__date-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.modal__date-input {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+}
+
+.modal__date-input:focus {
+  outline: none;
+  border-color: var(--color-cyan);
+  box-shadow: 0 0 0 2px rgba(79, 209, 255, 0.1);
+}
+
+.modal__date-input::placeholder {
+  color: var(--color-text-dim);
+}
+
+.modal__rocket-type-section {
+  margin-top: 20px;
+}
+
+.modal__rocket-type-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.modal__rocket-type-input {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+}
+
+.modal__rocket-type-input:focus {
+  outline: none;
+  border-color: var(--color-cyan);
+  box-shadow: 0 0 0 2px rgba(79, 209, 255, 0.1);
+}
+
+.modal__rocket-type-input::placeholder {
   color: var(--color-text-dim);
 }
 </style>

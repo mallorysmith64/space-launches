@@ -68,9 +68,9 @@ def get_json_path():
     """Get the path to the mission data JSON file"""
     return os.path.join(os.path.dirname(__file__), '..', 'src', 'data', 'spacex-mission-data.json')
 
-def update_mission_json(mission_id, new_image_path=None, new_title=None, new_description=None, new_date=None):
+def update_mission_json(mission_id, new_image_path=None, new_title=None, new_description=None, new_date=None, new_rocket_type=None):
     """
-    Update the mission's image path, title, description, and/or date in the JSON data file
+    Update the mission's image path, title, description, date, and/or rocket type in the JSON data file
     
     Args:
         mission_id: The mission ID to find and update
@@ -78,6 +78,7 @@ def update_mission_json(mission_id, new_image_path=None, new_title=None, new_des
         new_title: The new mission title to set (optional)
         new_description: The new mission description to set (optional)
         new_date: The new mission date to set (optional)
+        new_rocket_type: The new rocket type to set (optional)
     
     Returns:
         True if successful, False otherwise
@@ -101,6 +102,8 @@ def update_mission_json(mission_id, new_image_path=None, new_title=None, new_des
                     mission['description'] = new_description
                 if new_date:
                     mission['date'] = new_date
+                if new_rocket_type:
+                    mission['rocketName'] = new_rocket_type
                 updated = True
                 break
         
@@ -121,6 +124,8 @@ def update_mission_json(mission_id, new_image_path=None, new_title=None, new_des
             updates.append(f"description: {new_description[:50]}...")
         if new_date:
             updates.append(f"date: {new_date}")
+        if new_rocket_type:
+            updates.append(f"rocket type: {new_rocket_type}")
         print(f"Updated mission {mission_id} with new {', '.join(updates)}")
         return True
     
@@ -198,8 +203,9 @@ def upload_image():
     - newTitle: new mission title (optional)
     - newDescription: new mission description (optional)
     - newDate: new mission date (optional)
+    - newRocketType: new rocket type (optional)
     
-    At least one of 'file', 'newTitle', 'newDescription', or 'newDate' must be provided.
+    At least one of 'file', 'newTitle', 'newDescription', 'newDate', or 'newRocketType' must be provided.
     """
     try:
         mission_id = request.form.get('missionId', '').strip()
@@ -207,6 +213,7 @@ def upload_image():
         new_title = request.form.get('newTitle', '').strip()
         new_description = request.form.get('newDescription', '').strip()
         new_date = request.form.get('newDate', '').strip()
+        new_rocket_type = request.form.get('newRocketType', '').strip()
         
         # Validate that we have a mission ID
         if not mission_id:
@@ -220,11 +227,12 @@ def upload_image():
         has_new_title = bool(new_title)
         has_new_description = bool(new_description)
         has_new_date = bool(new_date)
+        has_new_rocket_type = bool(new_rocket_type)
         
-        if not has_file and not has_new_title and not has_new_description and not has_new_date:
+        if not has_file and not has_new_title and not has_new_description and not has_new_date and not has_new_rocket_type:
             return jsonify({
                 'status': 'error',
-                'message': 'At least one update (image, title, description, or date) must be provided'
+                'message': 'At least one update (image, title, description, date, or rocket type) must be provided'
             }), 400
         
         image_path = None
@@ -275,7 +283,8 @@ def upload_image():
             new_image_path=image_path if image_path else None, 
             new_title=new_title if new_title else None,
             new_description=new_description if new_description else None,
-            new_date=new_date if new_date else None
+            new_date=new_date if new_date else None,
+            new_rocket_type=new_rocket_type if new_rocket_type else None
         )
         
         if not json_updated:
