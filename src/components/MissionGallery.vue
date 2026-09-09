@@ -89,8 +89,35 @@ const imageUrlByPath: Record<string, string> = Object.fromEntries(
   Object.entries(imageModules).map(([path, url]) => [path.replace('..', '/src'), url]),
 )
 
+// Fallback index: filename only (lowercased), so mismatches in directory
+// structure or letter case between the JSON data and the actual files on
+// disk don't break resolution.
+const imageUrlByBasename: Record<string, string> = Object.fromEntries(
+  Object.entries(imageModules).map(([path, url]) => {
+    const basename = path.split('/').pop() ?? path
+    return [basename.toLowerCase(), url]
+  }),
+)
+
+if (import.meta.env.DEV) {
+  console.log('[MissionGallery] Bundled image paths found:', Object.keys(imageModules))
+}
+
 function resolveImage(path: string): string {
-  return imageUrlByPath[path] ?? path
+  const exact = imageUrlByPath[path]
+  if (exact) return exact
+
+  const basename = path.split('/').pop() ?? path
+  const byName = imageUrlByBasename[basename.toLowerCase()]
+  if (byName) {
+    console.warn(
+      `[MissionGallery] Matched "${path}" by filename only — the folder or case in the JSON doesn't match the file on disk. Consider fixing the JSON path.`,
+    )
+    return byName
+  }
+
+  console.warn(`[MissionGallery] No bundled image found for path: "${path}"`)
+  return path
 }
 
 function companyLabel(company: Company): string {
