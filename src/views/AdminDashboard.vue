@@ -19,6 +19,13 @@
             {{ option.label }}
           </option>
         </select>
+
+        <label for="rocket-select" class="mission-gallery__filter-label">Rocket</label>
+        <select id="rocket-select" v-model="selectedRocket" class="mission-gallery__select">
+          <option v-for="option in rocketOptions" :key="option" :value="option">
+            {{ option === 'all' ? 'All rockets' : option }}
+          </option>
+        </select>
       </div>
       <button @click="openAddModal" class="add-mission-btn" type="button">+ Add New Mission</button>
     </header>
@@ -403,7 +410,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import spacexMissionsData from '../data/spacex-mission-data.json'
 import jaxaMissionsData from '../data/jaxa-mission-data.json'
 import { useRouter } from 'vue-router'
@@ -452,11 +459,38 @@ const API_BASE_URL = 'http://localhost:5000'
 const router = useRouter()
 const missions = ref<MissionWithCompany[]>([])
 const selectedCompany = ref<'all' | Company>('all')
+const selectedRocket = ref<'all' | string>('all')
 const isLoading = ref(false)
 
+const rocketOptions = computed(() => {
+  const missionsForCompany =
+    selectedCompany.value === 'all'
+      ? missions.value
+      : missions.value.filter((mission) => mission.company === selectedCompany.value)
+
+  const uniqueRockets = Array.from(
+    new Set(missionsForCompany.map((mission) => mission.rocketName)),
+  ).sort((a, b) => a.localeCompare(b))
+  return ['all', ...uniqueRockets]
+})
+
+// If the company filter changes and the currently selected rocket isn't
+// available for the new company (or "all" companies), fall back to "all"
+// rather than silently showing zero results.
+watch(rocketOptions, (options) => {
+  if (!options.includes(selectedRocket.value)) {
+    selectedRocket.value = 'all'
+  }
+})
+
 const filteredMissions = computed(() => {
-  if (selectedCompany.value === 'all') return missions.value
-  return missions.value.filter((mission) => mission.company === selectedCompany.value)
+  return missions.value.filter((mission) => {
+    const matchesCompany =
+      selectedCompany.value === 'all' || mission.company === selectedCompany.value
+    const matchesRocket =
+      selectedRocket.value === 'all' || mission.rocketName === selectedRocket.value
+    return matchesCompany && matchesRocket
+  })
 })
 
 // Eagerly import every image under src/images so Vite bundles them and
@@ -571,7 +605,7 @@ function loadMissions(): MissionWithCompany[] {
 /**
  * Opens edit modal for a specific mission
  */
-function openEditModal(mission: Mission): void {
+function openEditModal(mission: MissionWithCompany): void {
   editingMission.value = mission
   editingTitle.value = mission.name
   editingDescription.value = mission.description
@@ -800,7 +834,7 @@ async function saveNewMission(): Promise<void> {
 /**
  * Opens the delete confirmation modal for a specific mission
  */
-function openDeleteModal(mission: Mission): void {
+function openDeleteModal(mission: MissionWithCompany): void {
   missionToDelete.value = mission
   deleteError.value = ''
   showDeleteModal.value = true
