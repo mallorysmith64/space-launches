@@ -15,7 +15,6 @@
             loading="lazy"
             decoding="async"
           />
-          <div class="mission-card__rocket-badge">{{ mission.rocketName }}</div>
         </div>
         <div class="mission-card__body">
           <h3 class="mission-card__title">{{ mission.name }}</h3>

@@ -26,7 +26,6 @@
             loading="lazy"
             decoding="async"
           />
-          <div class="mission-card__rocket-badge">{{ mission.rocketName }}</div>
           <div class="mission-card__action-buttons">
             <button
               @click="openEditModal(mission)"
