@@ -23,6 +23,18 @@
 
     <!-- Show missions grid -->
     <div v-if="filteredMissions.length > 0" class="mission-gallery__grid">
+      <!-- Global show all/show less toggle -->
+      <div class="mission-gallery__global-toggle">
+        <button
+          v-if="hasExpandableCards"
+          type="button"
+          class="mission-gallery__global-button"
+          @click="toggleAllDescriptions"
+        >
+          {{ allExpanded ? 'Show less' : 'Show all' }}
+        </button>
+      </div>
+
       <article v-for="mission in filteredMissions" :key="mission.id" class="mission-card">
         <div class="mission-card__image-wrapper">
           <img
@@ -39,7 +51,21 @@
           <p class="mission-card__date">{{ mission.date }}</p>
           <p class="mission-card__rocket">{{ mission.rocketName }}</p>
           <p class="mission-card__type" v-if="mission.missionType">{{ mission.missionType }}</p>
-          <p class="mission-card__desc">{{ mission.description }}</p>
+          <p
+            class="mission-card__desc"
+            :class="{ 'mission-card__desc--expanded': isExpanded(mission.id) }"
+            :ref="(el) => setDescRef(mission.id, el)"
+          >
+            {{ mission.description }}
+          </p>
+          <button
+            v-if="isTruncated(mission.id)"
+            type="button"
+            class="mission-card__desc-toggle"
+            @click="toggleDescription(mission.id)"
+          >
+            {{ isExpanded(mission.id) ? 'Show less' : 'Show more' }}
+          </button>
         </div>
       </article>
     </div>
@@ -49,7 +75,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import spacexMissionsData from '../data/spacex-mission-data.json'
 import jaxaMissionsData from '../data/jaxa-mission-data.json'
 
@@ -83,6 +109,111 @@ const companyOptions = [
 const missions = ref<MissionWithCompany[]>([])
 const selectedCompany = ref<'all' | Company>('all')
 const selectedRocket = ref<'all' | string>('all')
+
+// Tracks which mission cards have their full description expanded, keyed
+// by mission id. Works the same for SpaceX and JAXA missions since both
+// are rendered from the same combined, tagged list.
+const expandedDescriptionIds = ref<Set<string>>(new Set())
+
+// Tracks which descriptions are actually clipped by the 3-line clamp in
+// .mission-card__desc, so the "Show more" toggle only appears where it's
+// needed. Determined by measuring the real rendered element rather than
+// guessing from character count, since the same description can wrap
+// differently depending on card width.
+const truncatedDescriptionIds = ref<Set<string>>(new Set())
+const descEls = new Map<string, HTMLElement>()
+
+function setDescRef(missionId: string, el: unknown): void {
+  if (el instanceof HTMLElement) {
+    descEls.set(missionId, el)
+  } else {
+    descEls.delete(missionId)
+  }
+}
+
+function isTruncated(missionId: string): boolean {
+  return truncatedDescriptionIds.value.has(missionId)
+}
+
+/**
+ * Compares each description element's full content height (scrollHeight)
+ * against its clamped visible height (clientHeight) to see if text is
+ * actually being cut off. Skips elements that are currently expanded,
+ * since removing the clamp makes them equal — the previously-detected
+ * truncated state is preserved for those instead of being cleared.
+ */
+function checkTruncatedDescriptions(): void {
+  const next = new Set(truncatedDescriptionIds.value)
+
+  descEls.forEach((el, missionId) => {
+    if (expandedDescriptionIds.value.has(missionId)) return
+
+    const isOverflowing = el.scrollHeight - el.clientHeight > 1
+    if (isOverflowing) {
+      next.add(missionId)
+    } else {
+      next.delete(missionId)
+    }
+  })
+
+  truncatedDescriptionIds.value = next
+}
+
+let resizeTimeout: ReturnType<typeof setTimeout> | undefined
+function onWindowResize(): void {
+  clearTimeout(resizeTimeout)
+  resizeTimeout = setTimeout(checkTruncatedDescriptions, 150)
+}
+
+function isExpanded(missionId: string): boolean {
+  return expandedDescriptionIds.value.has(missionId)
+}
+
+function toggleDescription(missionId: string): void {
+  const next = new Set(expandedDescriptionIds.value)
+  if (next.has(missionId)) {
+    next.delete(missionId)
+  } else {
+    next.add(missionId)
+  }
+  expandedDescriptionIds.value = next
+}
+
+/**
+ * Expand or collapse all truncated descriptions at once.
+ * Only affects cards that actually have truncated text.
+ */
+function toggleAllDescriptions(): void {
+  const next = new Set(expandedDescriptionIds.value)
+
+  // Get all truncated card IDs
+  const truncatedIds = Array.from(truncatedDescriptionIds.value)
+
+  if (allExpanded.value) {
+    // If all are expanded, collapse all truncated cards
+    truncatedIds.forEach((id) => next.delete(id))
+  } else {
+    // If not all are expanded, expand all truncated cards
+    truncatedIds.forEach((id) => next.add(id))
+  }
+
+  expandedDescriptionIds.value = next
+}
+
+/**
+ * Computed property to determine if all truncated cards are currently expanded
+ */
+const allExpanded = computed(() => {
+  if (truncatedDescriptionIds.value.size === 0) return false
+  return Array.from(truncatedDescriptionIds.value).every((id) =>
+    expandedDescriptionIds.value.has(id),
+  )
+})
+
+/**
+ * Computed property to check if there are any expandable cards
+ */
+const hasExpandableCards = computed(() => truncatedDescriptionIds.value.size > 0)
 
 // Eagerly import every image under src/images so Vite bundles them and
 // rewrites each to a real, hashed build URL. The keys this produces look
@@ -197,9 +328,31 @@ const filteredMissions = computed(() => {
   })
 })
 
+// Reset expanded descriptions when filters change
+watch(filteredMissions, () => {
+  expandedDescriptionIds.value = new Set()
+})
+
 onMounted(() => {
   missions.value = loadMissions()
+  window.addEventListener('resize', onWindowResize)
 })
+
+onUnmounted(() => {
+  window.removeEventListener('resize', onWindowResize)
+  clearTimeout(resizeTimeout)
+})
+
+// Re-measure truncation any time the visible set of cards changes (initial
+// load, or the company/rocket filters narrowing the list) — 'post' waits
+// until Vue has updated the DOM so the elements reflect the new content.
+watch(
+  filteredMissions,
+  () => {
+    nextTick(checkTruncatedDescriptions)
+  },
+  { flush: 'post' },
+)
 </script>
 
 <style scoped>
@@ -256,6 +409,36 @@ onMounted(() => {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 20px;
+}
+
+.mission-gallery__global-toggle {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 16px;
+}
+
+.mission-gallery__global-button {
+  padding: 8px 16px;
+  border: 1px solid var(--color-accent, #0ea5e9);
+  background: transparent;
+  color: var(--color-accent, #0ea5e9);
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.mission-gallery__global-button:hover,
+.mission-gallery__global-button:focus {
+  background-color: var(--color-accent, #0ea5e9);
+  color: white;
+  outline: none;
 }
 
 .mission-card {
@@ -374,5 +557,32 @@ onMounted(() => {
   -webkit-box-orient: vertical;
   overflow: hidden;
   flex: 1;
+}
+
+.mission-card__desc--expanded {
+  display: block;
+  -webkit-line-clamp: unset;
+  overflow: visible;
+  flex: none;
+}
+
+.mission-card__desc-toggle {
+  align-self: flex-start;
+  margin-top: 6px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-accent, #0ea5e9);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.mission-card__desc-toggle:hover,
+.mission-card__desc-toggle:focus {
+  text-decoration: underline;
+  outline: none;
 }
 </style>
