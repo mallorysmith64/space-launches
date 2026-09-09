@@ -4,9 +4,19 @@
     <h2 class="section-title">Multiple missions, in pictures</h2>
     <p class="section-lede">A look back at different rockets and completed flights</p>
 
+    <!-- Company filter -->
+    <div class="mission-gallery__controls">
+      <label for="company-select" class="mission-gallery__filter-label">Company</label>
+      <select id="company-select" v-model="selectedCompany" class="mission-gallery__select">
+        <option v-for="option in companyOptions" :key="option.value" :value="option.value">
+          {{ option.label }}
+        </option>
+      </select>
+    </div>
+
     <!-- Show missions grid -->
-    <div v-if="missions.length > 0" class="mission-gallery__grid">
-      <article v-for="mission in missions" :key="mission.id" class="mission-card">
+    <div v-if="filteredMissions.length > 0" class="mission-gallery__grid">
+      <article v-for="mission in filteredMissions" :key="mission.id" class="mission-card">
         <div class="mission-card__image-wrapper">
           <img
             :src="mission.image"
@@ -15,6 +25,7 @@
             loading="lazy"
             decoding="async"
           />
+          <span class="mission-card__company-badge">{{ companyLabel(mission.company) }}</span>
         </div>
         <div class="mission-card__body">
           <h3 class="mission-card__title">{{ mission.name }}</h3>
@@ -31,8 +42,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import missionsData from '../data/spacex-mission-data.json'
+import { ref, computed, onMounted } from 'vue'
+import spacexMissionsData from '../data/spacex-mission-data.json'
+import jaxaMissionsData from '../data/jaxa-mission-data.json'
+
+type Company = 'spacex' | 'jaxa'
 
 interface Mission {
   id: string
@@ -44,32 +58,66 @@ interface Mission {
   missionType?: string
 }
 
-const missions = ref<Mission[]>([])
+interface MissionWithCompany extends Mission {
+  company: Company
+}
+
+const COMPANY_LABELS: Record<Company, string> = {
+  spacex: 'SpaceX',
+  jaxa: 'JAXA',
+}
+
+const companyOptions = [
+  { value: 'all', label: 'All companies' },
+  { value: 'spacex', label: 'SpaceX' },
+  { value: 'jaxa', label: 'JAXA' },
+]
+
+const missions = ref<MissionWithCompany[]>([])
+const selectedCompany = ref<'all' | Company>('all')
+
+function companyLabel(company: Company): string {
+  return COMPANY_LABELS[company]
+}
 
 /**
- * Loads missions straight from the bundled JSON, keeping only one mission per
- * unique image URL (first occurrence wins) so no photo appears twice in the
- * grid. Missions are included even if their image URL turns out to be broken —
- * we don't have a way to verify reachability at build time, so we render them
- * as-is for now.
+ * Loads missions from the bundled JSON files for each company, tagging each
+ * mission with its company so the dropdown can filter the combined list.
+ * Within each company's data, only one mission per unique image URL is kept
+ * (first occurrence wins) so no photo appears twice in the grid. Missions
+ * are included even if their image URL turns out to be broken — we don't
+ * have a way to verify reachability at build time, so we render them as-is
+ * for now.
  */
-function loadMissions(): Mission[] {
+function loadMissionsForCompany(data: Mission[], company: Company): MissionWithCompany[] {
+  const seenImages = new Set<string>()
+  const deduped: MissionWithCompany[] = []
+
+  for (const mission of data) {
+    if (!mission.image || seenImages.has(mission.image)) continue
+    seenImages.add(mission.image)
+    deduped.push({ ...mission, company })
+  }
+
+  return deduped
+}
+
+function loadMissions(): MissionWithCompany[] {
   try {
-    const seenImages = new Set<string>()
-    const deduped: Mission[] = []
-
-    for (const mission of missionsData as Mission[]) {
-      if (!mission.image || seenImages.has(mission.image)) continue
-      seenImages.add(mission.image)
-      deduped.push(mission)
-    }
-
-    return deduped
+    return [
+      ...loadMissionsForCompany(spacexMissionsData as Mission[], 'spacex'),
+      ...loadMissionsForCompany(jaxaMissionsData as Mission[], 'jaxa'),
+    ]
   } catch (err) {
     console.error('Failed to load mission data:', err)
     return []
   }
 }
+
+const filteredMissions = computed(() => {
+  if (selectedCompany.value === 'all') return missions.value
+  return missions.value.filter((mission) => mission.company === selectedCompany.value)
+})
 
 onMounted(() => {
   missions.value = loadMissions()
@@ -88,8 +136,45 @@ onMounted(() => {
   font-size: 14px;
 }
 
+.mission-gallery__controls {
+  margin-top: 28px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mission-gallery__filter-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.mission-gallery__select {
+  appearance: none;
+  background: var(--color-bg-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 8px 36px 8px 14px;
+  font-size: 14px;
+  font-weight: 500;
+  color: inherit;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  transition: border-color 0.2s ease;
+}
+
+.mission-gallery__select:hover,
+.mission-gallery__select:focus {
+  border-color: var(--color-accent, #0ea5e9);
+  outline: none;
+}
+
 .mission-gallery__grid {
-  margin-top: 40px;
+  margin-top: 24px;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 20px;
@@ -135,6 +220,21 @@ onMounted(() => {
   position: absolute;
   bottom: 8px;
   left: 8px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  backdrop-filter: blur(4px);
+}
+
+.mission-card__company-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
   background: rgba(0, 0, 0, 0.7);
   color: white;
   padding: 4px 12px;
