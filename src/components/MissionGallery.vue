@@ -49,7 +49,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import spacexMissionsData from '../data/spacex-mission-data.json'
 import jaxaMissionsData from '../data/jaxa-mission-data.json'
 
@@ -167,10 +167,24 @@ function loadMissions(): MissionWithCompany[] {
 }
 
 const rocketOptions = computed(() => {
+  const missionsForCompany =
+    selectedCompany.value === 'all'
+      ? missions.value
+      : missions.value.filter((mission) => mission.company === selectedCompany.value)
+
   const uniqueRockets = Array.from(
-    new Set(missions.value.map((mission) => mission.rocketName)),
+    new Set(missionsForCompany.map((mission) => mission.rocketName)),
   ).sort((a, b) => a.localeCompare(b))
   return ['all', ...uniqueRockets]
+})
+
+// If the company filter changes and the currently selected rocket isn't
+// available for the new company (or "all" companies), fall back to "all"
+// rather than silently showing zero results.
+watch(rocketOptions, (options) => {
+  if (!options.includes(selectedRocket.value)) {
+    selectedRocket.value = 'all'
+  }
 })
 
 const filteredMissions = computed(() => {
