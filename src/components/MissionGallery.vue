@@ -4,12 +4,19 @@
     <h2 class="section-title">Multiple missions, in pictures</h2>
     <p class="section-lede">A look back at different rockets and completed flights</p>
 
-    <!-- Company filter -->
+    <!-- Company and rocket filters -->
     <div class="mission-gallery__controls">
       <label for="company-select" class="mission-gallery__filter-label">Company</label>
       <select id="company-select" v-model="selectedCompany" class="mission-gallery__select">
         <option v-for="option in companyOptions" :key="option.value" :value="option.value">
           {{ option.label }}
+        </option>
+      </select>
+
+      <label for="rocket-select" class="mission-gallery__filter-label">Rocket</label>
+      <select id="rocket-select" v-model="selectedRocket" class="mission-gallery__select">
+        <option v-for="option in rocketOptions" :key="option" :value="option">
+          {{ option === 'all' ? 'All rockets' : option }}
         </option>
       </select>
     </div>
@@ -75,6 +82,7 @@ const companyOptions = [
 
 const missions = ref<MissionWithCompany[]>([])
 const selectedCompany = ref<'all' | Company>('all')
+const selectedRocket = ref<'all' | string>('all')
 
 // Eagerly import every image under src/images so Vite bundles them and
 // rewrites each to a real, hashed build URL. The keys this produces look
@@ -158,9 +166,21 @@ function loadMissions(): MissionWithCompany[] {
   }
 }
 
+const rocketOptions = computed(() => {
+  const uniqueRockets = Array.from(
+    new Set(missions.value.map((mission) => mission.rocketName)),
+  ).sort((a, b) => a.localeCompare(b))
+  return ['all', ...uniqueRockets]
+})
+
 const filteredMissions = computed(() => {
-  if (selectedCompany.value === 'all') return missions.value
-  return missions.value.filter((mission) => mission.company === selectedCompany.value)
+  return missions.value.filter((mission) => {
+    const matchesCompany =
+      selectedCompany.value === 'all' || mission.company === selectedCompany.value
+    const matchesRocket =
+      selectedRocket.value === 'all' || mission.rocketName === selectedRocket.value
+    return matchesCompany && matchesRocket
+  })
 })
 
 onMounted(() => {

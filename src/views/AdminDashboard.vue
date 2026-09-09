@@ -10,14 +10,22 @@
       </div>
     </div>
 
-    <!-- Mission grid header with Add New action -->
+    <!-- Mission grid header with company filter + Add New action -->
     <header class="mission-gallery__header">
+      <div class="mission-gallery__controls">
+        <label for="company-select" class="mission-gallery__filter-label">Company</label>
+        <select id="company-select" v-model="selectedCompany" class="mission-gallery__select">
+          <option v-for="option in companyOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
       <button @click="openAddModal" class="add-mission-btn" type="button">+ Add New Mission</button>
     </header>
 
     <!-- Show missions grid -->
-    <div v-if="missions.length > 0" class="mission-gallery__grid">
-      <article v-for="mission in missions" :key="mission.id" class="mission-card">
+    <div v-if="filteredMissions.length > 0" class="mission-gallery__grid">
+      <article v-for="mission in filteredMissions" :key="mission.id" class="mission-card">
         <div class="mission-card__image-wrapper">
           <img
             :src="mission.image"
@@ -26,6 +34,7 @@
             loading="lazy"
             decoding="async"
           />
+          <span class="mission-card__company-badge">{{ companyLabel(mission.company) }}</span>
           <div class="mission-card__action-buttons">
             <button
               @click="openEditModal(mission)"
@@ -394,9 +403,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import missionsData from '../data/spacex-mission-data.json'
+import { ref, computed, onMounted } from 'vue'
+import spacexMissionsData from '../data/spacex-mission-data.json'
+import jaxaMissionsData from '../data/jaxa-mission-data.json'
 import { useRouter } from 'vue-router'
+
+type Company = 'spacex' | 'jaxa'
 
 interface Mission {
   id: string
@@ -408,6 +420,10 @@ interface Mission {
   missionType?: string
 }
 
+interface MissionWithCompany extends Mission {
+  company: Company
+}
+
 interface ApiResponse {
   message?: string
   imagePath?: string
@@ -415,16 +431,70 @@ interface ApiResponse {
   mission?: Mission
 }
 
+const COMPANY_LABELS: Record<Company, string> = {
+  spacex: 'SpaceX',
+  jaxa: 'JAXA',
+}
+
+const companyOptions = [
+  { value: 'all', label: 'All companies' },
+  { value: 'spacex', label: 'SpaceX' },
+  { value: 'jaxa', label: 'JAXA' },
+]
+
+function companyLabel(company: Company): string {
+  return COMPANY_LABELS[company]
+}
+
 // API Base URL - point to Flask backend on port 5000
 const API_BASE_URL = 'http://localhost:5000'
 
 const router = useRouter()
-const missions = ref<Mission[]>([])
+const missions = ref<MissionWithCompany[]>([])
+const selectedCompany = ref<'all' | Company>('all')
 const isLoading = ref(false)
+
+const filteredMissions = computed(() => {
+  if (selectedCompany.value === 'all') return missions.value
+  return missions.value.filter((mission) => mission.company === selectedCompany.value)
+})
+
+// Eagerly import every image under src/images so Vite bundles them and
+// rewrites each to a real, hashed build URL. Same resolution strategy as
+// MissionGallery.vue: match by full path first, then fall back to matching
+// by filename only (case-insensitive) so folder/case differences between
+// the JSON data and the files on disk don't leave images blank.
+const imageModules = import.meta.glob('../images/**/*.{png,jpg,jpeg,webp,svg}', {
+  eager: true,
+  import: 'default',
+}) as Record<string, string>
+
+const imageUrlByPath: Record<string, string> = Object.fromEntries(
+  Object.entries(imageModules).map(([path, url]) => [path.replace('..', '/src'), url]),
+)
+
+const imageUrlByBasename: Record<string, string> = Object.fromEntries(
+  Object.entries(imageModules).map(([path, url]) => {
+    const basename = path.split('/').pop() ?? path
+    return [basename.toLowerCase(), url]
+  }),
+)
+
+function resolveImage(path: string): string {
+  const exact = imageUrlByPath[path]
+  if (exact) return exact
+
+  const basename = path.split('/').pop() ?? path
+  const byName = imageUrlByBasename[basename.toLowerCase()]
+  if (byName) return byName
+
+  console.warn(`[AdminDashboard] No bundled image found for path: "${path}"`)
+  return path
+}
 
 // Edit modal state
 const showEditModal = ref(false)
-const editingMission = ref<Mission | null>(null)
+const editingMission = ref<MissionWithCompany | null>(null)
 const editingTitle = ref('')
 const editingDescription = ref('')
 const editingDate = ref('')
@@ -463,29 +533,35 @@ const newSaveSuccess = ref('')
 
 // Delete Mission modal state
 const showDeleteModal = ref(false)
-const missionToDelete = ref<Mission | null>(null)
+const missionToDelete = ref<MissionWithCompany | null>(null)
 const isDeleting = ref(false)
 const deleteError = ref('')
 
 /**
- * Loads missions straight from the bundled JSON, keeping only one mission per
- * unique image URL (first occurrence wins) so no photo appears twice in the
- * grid. Missions are included even if their image URL turns out to be broken —
- * we don't have a way to verify reachability at build time, so we render them
- * as-is for now.
+ * Loads missions from both companies' bundled JSON, tagging each with its
+ * company so the dropdown can filter the combined list. Within each
+ * company's data, only one mission per unique image URL is kept (first
+ * occurrence wins) so no photo appears twice in the grid.
  */
-function loadMissions(): Mission[] {
+function loadMissionsForCompany(data: Mission[], company: Company): MissionWithCompany[] {
+  const seenImages = new Set<string>()
+  const deduped: MissionWithCompany[] = []
+
+  for (const mission of data) {
+    if (!mission.image || seenImages.has(mission.image)) continue
+    seenImages.add(mission.image)
+    deduped.push({ ...mission, company, image: resolveImage(mission.image) })
+  }
+
+  return deduped
+}
+
+function loadMissions(): MissionWithCompany[] {
   try {
-    const seenImages = new Set<string>()
-    const deduped: Mission[] = []
-
-    for (const mission of missionsData as Mission[]) {
-      if (!mission.image || seenImages.has(mission.image)) continue
-      seenImages.add(mission.image)
-      deduped.push(mission)
-    }
-
-    return deduped
+    return [
+      ...loadMissionsForCompany(spacexMissionsData as Mission[], 'spacex'),
+      ...loadMissionsForCompany(jaxaMissionsData as Mission[], 'jaxa'),
+    ]
   } catch (err) {
     console.error('Failed to load mission data:', err)
     return []
@@ -692,7 +768,13 @@ async function saveNewMission(): Promise<void> {
     }
 
     if (data.mission) {
-      missions.value.unshift(data.mission)
+      // Created missions are always saved to spacex-mission-data.json by
+      // the current backend, so they're tagged accordingly here.
+      missions.value.unshift({
+        ...data.mission,
+        company: 'spacex',
+        image: resolveImage(data.mission.image),
+      })
     }
 
     newSaveSuccess.value = 'Mission successfully created'
@@ -906,7 +988,7 @@ async function saveImage(): Promise<void> {
     // Update the mission's image URL, title, description, and date with the new values
     if (editingMission.value?.id) {
       if (data.imagePath) {
-        editingMission.value.image = data.imagePath
+        editingMission.value.image = resolveImage(data.imagePath)
       }
       editingMission.value.name = editingTitle.value
       editingMission.value.description = editingDescription.value
@@ -917,7 +999,7 @@ async function saveImage(): Promise<void> {
         const missionIndex = missionsList.findIndex((m) => m.id === editingMission.value!.id)
         if (missionIndex !== -1 && missionsList[missionIndex]) {
           if (data.imagePath) {
-            missionsList[missionIndex].image = data.imagePath
+            missionsList[missionIndex].image = resolveImage(data.imagePath)
           }
           missionsList[missionIndex].name = editingTitle.value
           missionsList[missionIndex].description = editingDescription.value
@@ -1035,7 +1117,59 @@ onMounted(() => {
   margin-left: 20px;
   margin-right: 20px;
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mission-gallery__controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mission-gallery__filter-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.mission-gallery__select {
+  appearance: none;
+  background: var(--color-bg-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 8px 36px 8px 14px;
+  font-size: 14px;
+  font-weight: 500;
+  color: inherit;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  transition: border-color 0.2s ease;
+}
+
+.mission-gallery__select:hover,
+.mission-gallery__select:focus {
+  border-color: var(--color-accent, #0ea5e9);
+  outline: none;
+}
+
+.mission-card__company-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  backdrop-filter: blur(4px);
 }
 
 .add-mission-btn {
