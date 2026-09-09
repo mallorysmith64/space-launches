@@ -76,6 +76,23 @@ const companyOptions = [
 const missions = ref<MissionWithCompany[]>([])
 const selectedCompany = ref<'all' | Company>('all')
 
+// Eagerly import every image under src/images so Vite bundles them and
+// rewrites each to a real, hashed build URL. The keys this produces look
+// like "../images/jaxa/selene-kaguya.jpg" (relative to this file) — we
+// normalize those to "/src/images/..." to match the JSON data's format.
+const imageModules = import.meta.glob('../images/**/*.{png,jpg,jpeg,webp,svg}', {
+  eager: true,
+  import: 'default',
+}) as Record<string, string>
+
+const imageUrlByPath: Record<string, string> = Object.fromEntries(
+  Object.entries(imageModules).map(([path, url]) => [path.replace('..', '/src'), url]),
+)
+
+function resolveImage(path: string): string {
+  return imageUrlByPath[path] ?? path
+}
+
 function companyLabel(company: Company): string {
   return COMPANY_LABELS[company]
 }
@@ -96,7 +113,7 @@ function loadMissionsForCompany(data: Mission[], company: Company): MissionWithC
   for (const mission of data) {
     if (!mission.image || seenImages.has(mission.image)) continue
     seenImages.add(mission.image)
-    deduped.push({ ...mission, company })
+    deduped.push({ ...mission, company, image: resolveImage(mission.image) })
   }
 
   return deduped
