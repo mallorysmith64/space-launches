@@ -6,7 +6,7 @@ import MissionGallery from '../components/MissionGallery.vue'
   <section class="hero">
     <div class="container hero__inner">
       <p class="eyebrow">Mission control</p>
-      <h1 class="hero_title">Every SpaceX launch,<br />tracked in one feed</h1>
+      <h1 class="hero_title">Space mission launches,<br />tracked in one feed</h1>
     </div>
   </section>
 

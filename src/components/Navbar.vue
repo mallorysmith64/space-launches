@@ -2,7 +2,7 @@
   <header class="nav">
     <div class="nav__inner container">
       <router-link to="/" class="nav__brand" @click="closeMenu">
-        <span class="nav__brand-text">SpaceX Launches <span class="dim"></span></span>
+        <span class="nav__brand-text">Space Launches <span class="dim"></span></span>
       </router-link>
 
       <button

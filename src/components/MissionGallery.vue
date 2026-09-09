@@ -1,8 +1,8 @@
 <template>
   <section class="section container mission-gallery">
     <p class="eyebrow">Mission gallery</p>
-    <h2 class="section-title">Recent missions, in pictures.</h2>
-    <p class="section-lede">A look back at SpaceX's rockets and completed flights</p>
+    <h2 class="section-title">Multiple missions, in pictures</h2>
+    <p class="section-lede">A look back at different rockets and completed flights</p>
 
     <!-- Show missions grid -->
     <div v-if="missions.length > 0" class="mission-gallery__grid">
