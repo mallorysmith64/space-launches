@@ -25,7 +25,7 @@
 
 .footer__inner {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .footer__admin-link {
