@@ -157,16 +157,6 @@ function isExpanded(missionId: string): boolean {
   return expandedDescriptionIds.value.has(missionId)
 }
 
-function toggleDescription(missionId: string): void {
-  const next = new Set(expandedDescriptionIds.value)
-  if (next.has(missionId)) {
-    next.delete(missionId)
-  } else {
-    next.add(missionId)
-  }
-  expandedDescriptionIds.value = next
-}
-
 /**
  * Expand or collapse all truncated descriptions at once.
  * Only affects cards that actually have truncated text.
@@ -197,11 +187,6 @@ const allExpanded = computed(() => {
     expandedDescriptionIds.value.has(id),
   )
 })
-
-/**
- * Computed property to check if there are any expandable cards
- */
-const hasExpandableCards = computed(() => truncatedDescriptionIds.value.size > 0)
 
 // Eagerly import every image under src/images so Vite bundles them and
 // rewrites each to a real, hashed build URL. The keys this produces look

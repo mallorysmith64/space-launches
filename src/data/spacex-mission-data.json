@@ -4,7 +4,7 @@
     "name": "CRS-29 Resupply Mission",
     "date": "November 26, 2023",
     "rocketName": "Falcon 9",
-    "image": "/src/images/crs29-resupply-mission.jpeg",
+    "image": "/src/images/spacex/crs29_resupply_mission.jpeg",
     "description": "SpaceX CRS-29, also known as SpX-29, is a Commercial Resupply Service mission to the International Space Station (ISS) launched on November 10, 2023.",
     "missionType": "Cargo Resupply"
   },
@@ -13,7 +13,7 @@
     "name": "Starlink Group 6-1",
     "date": "March 14, 2024",
     "rocketName": "Falcon 9",
-    "image": "/src/images/Starlink_Group_6-1.jpeg",
+    "image": "/src/images/spacex/starlink_group_6-1.jpeg",
     "description": "Launch of the sixth group of Starlink satellites to expand global internet coverage. Falcon 9 deployed 60 Starlink satellites into low Earth orbit.",
     "missionType": "Constellation Deployment"
   },
@@ -22,7 +22,7 @@
     "name": "Axiom Space Mission 3",
     "date": "January 18, 2024",
     "rocketName": "Falcon 9",
-    "image": "/src/images/Axiom_Space_Mission_3.jpeg",
+    "image": "/src/images/spacex/axiom_space_mission_3.jpeg",
     "description": "Third crewed commercial space station mission with Axiom Space. Four private astronauts traveled to the ISS for research and maintenance operations.",
     "missionType": "Crewed Commercial Mission"
   },
@@ -31,7 +31,7 @@
     "name": "GPS III Space Vehicle 06",
     "date": "June 13, 2023",
     "rocketName": "Falcon 9",
-    "image": "/src/images/GPS_III_Space_Vehicle_06.jpeg",
+    "image": "/src/images/spacex/gps_iii_space_vehicle_06.jpeg",
     "description": "Launch of the sixth next-generation GPS satellite for the U.S. Space Force. These satellites provide enhanced military and civilian navigation services.",
     "missionType": "Government Satellite Launch"
   },
@@ -40,7 +40,7 @@
     "name": "WorldView Legion Mission",
     "date": "September 12, 2023",
     "rocketName": "Falcon 9",
-    "image": "/src/images/Worldview_Legion_Mission.jpeg",
+    "image": "/src/images/spacex/worldview_legion_mission.jpeg",
     "description": "Launch of high-resolution Earth imaging satellites for Maxar Technologies. These satellites provide detailed satellite imagery for commercial and government applications.",
     "missionType": "Commercial Imaging"
   },
@@ -49,7 +49,7 @@
     "name": "Transporter-7 Rideshare",
     "date": "April 5, 2024",
     "rocketName": "Falcon 9",
-    "image": "/src/images/Transporter-7_Rideshare.jpeg",
+    "image": "/src/images/spacex/transporter_7_rideshare.jpeg",
     "description": "The seventh dedicated rideshare mission deploying 115+ small satellites and payloads. This cost-effective launch enables startups to reach orbit.",
     "missionType": "Rideshare Launch"
   },
@@ -58,7 +58,7 @@
     "name": "USSF-67 National Security Mission",
     "date": "August 2, 2023",
     "rocketName": "Falcon Heavy",
-    "image": "/src/images/USSF-67_National_Security_Mission.jpeg",
+    "image": "/src/images/spacex/ussf-67_national_security_mission.jpeg",
     "description": "Launch of classified U.S. Space Force payload using Falcon Heavy. The triple-core rocket delivered a national security satellite to geosynchronous orbit.",
     "missionType": "National Security Launch"
   },
@@ -67,7 +67,7 @@
     "name": "Viasat-3 Americas",
     "date": "December 19, 2023",
     "rocketName": "Falcon Heavy",
-    "image": "/src/images/Viasat-3_Americas.jpeg",
+    "image": "/src/images/spacex/viasat_3_americas.jpeg",
     "description": "Launch of the advanced Viasat-3 broadband satellite. Falcon Heavy delivered the massive telecommunications satellite to geosynchronous orbit for global internet coverage.",
     "missionType": "Commercial Satellite"
   },
@@ -76,7 +76,7 @@
     "name": "USSF-44 Space Force Mission",
     "date": "March 1, 2024",
     "rocketName": "Falcon Heavy",
-    "image": "/src/images/USSF-44_Space_Force_Mission.jpeg",
+    "image": "/src/images/spacex/ussf_44_space_force_mission.jpeg",
     "description": "U.S. Space Force national security space launch utilizing Falcon Heavy's heavy-lift capability. Payload deployed to high-energy transfer orbit.",
     "missionType": "Government Launch"
   },
@@ -85,7 +85,7 @@
     "name": "Starship Integrated Flight Test 1",
     "date": "April 20, 2023",
     "rocketName": "Starship",
-    "image": "/src/images/Starship_Integrated_Flight _Test_1.jpeg",
+    "image": "/src/images/spacex/starship_integrated_flight_test_1.jpeg",
     "description": "First integrated flight test of the fully stacked Starship vehicle. Despite RUD (rapid unscheduled disassembly), the test achieved valuable data for vehicle development.",
     "missionType": "Development Flight"
   },
@@ -94,7 +94,7 @@
     "name": "Starship Integrated Flight Test 2",
     "date": "November 18, 2023",
     "rocketName": "Starship",
-    "image": "/src/images/Starship_Integrated_Flight_Test_2.jpeg",
+    "image": "/src/images/spacex/starship_integrated_flight_test_2.jpeg",
     "description": "Second integrated flight test with improved Booster and Ship. The vehicle reached space and completed a controlled reentry and ocean splashdown.",
     "missionType": "Development Flight"
   },
@@ -103,7 +103,7 @@
     "name": "Starship Integrated Flight Test 3",
     "date": "March 14, 2024",
     "rocketName": "Starship",
-    "image": "/src/images/Starship_Integrated_Flight _Test_1.jpeg",
+    "image": "/src/images/spacex/starship_integrated_flight_test_3.jpeg",
     "description": "Third integrated flight test demonstrating continuous improvements. Ship hot staging was achieved, advancing toward engine separation in space.",
     "missionType": "Development Flight"
   },
@@ -112,7 +112,7 @@
     "name": "Starship Integrated Flight Test 4",
     "date": "June 6, 2024",
     "rocketName": "Starship",
-    "image": "/src/images/Starship_Integrated_Flight_Test_4.jpeg",
+    "image": "/src/images/spacex/starship_integrated_flight_test_4.jpeg",
     "description": "Fourth test flight achieving booster catch attempt and advanced Ship testing. Represented significant progress toward orbital refueling capability.",
     "missionType": "Development Flight"
   },
@@ -121,7 +121,7 @@
     "name": "Crew-7 Dragon Crewed Mission",
     "date": "August 26, 2023",
     "rocketName": "Falcon 9",
-    "image": "/src/images/Crew-7_Dragon_Crewed_Mission.jpeg",
+    "image": "/src/images/spacex/crew_7_dragon_crewed_mission.jpeg",
     "description": "Launch of four astronauts on Crew Dragon for a six-month expedition to the International Space Station. Falcon 9 delivered the capsule to orbit.",
     "missionType": "Crewed Spaceflight"
   },
@@ -130,7 +130,7 @@
     "name": "Palantir StarShield-5",
     "date": "February 27, 2024",
     "rocketName": "Falcon 9",
-    "image": "/src/images/Palantir_StarShield-5.jpeg",
+    "image": "/src/images/spacex/palantir_starshield_5.jpeg",
     "description": "Launch of synthetic aperture radar imaging satellite for national security. Falcon 9 delivered the advanced reconnaissance spacecraft to polar orbit.",
     "missionType": "Reconnaissance"
   },
@@ -139,7 +139,7 @@
     "name": "Intelsat 901 Relocation",
     "date": "January 6, 2024",
     "rocketName": "Falcon 9",
-    "image": "/src/images/Intelsat_901_Relocation.jpeg",
+    "image": "/src/images/spacex/intelsat_901_relocation.jpeg",
     "description": "Launch of Intelsat 901 telecommunications satellite. The mission involved relocating the satellite to a new orbital slot for improved service coverage.",
     "missionType": "Commercial Telecom"
   },
@@ -148,7 +148,7 @@
     "name": "Falcon Heavy Demo Flight",
     "date": "February 6, 2018",
     "rocketName": "Falcon Heavy",
-    "image": "/src/images/Falcon_Heavy_Demo_Flight.jpeg",
+    "image": "/src/images/spacex/falcon_heavy_demo_flight.jpeg",
     "description": "The maiden flight of Falcon Heavy, then the world's most powerful operational rocket. The demo flight famously carried Elon Musk's Tesla Roadster as a test payload and closed with the simultaneous landing of both side boosters back at Cape Canaveral.",
     "missionType": "Demonstration Flight"
   },
@@ -157,7 +157,7 @@
     "name": "Crew Dragon Demo-1",
     "date": "March 2, 2019",
     "rocketName": "Falcon 9",
-    "image": "/src/images/Crew_Dragon_Demo-1.jpeg",
+    "image": "/src/images/spacex/crew_dragon_demo_1.jpeg",
     "description": "The first uncrewed test flight of the Crew Dragon spacecraft, which autonomously docked with the International Space Station and returned safely to Earth, clearing the way for astronauts to fly on the vehicle.",
     "missionType": "Demonstration Flight"
   },
@@ -166,7 +166,7 @@
     "name": "Crew Dragon Demo-2",
     "date": "May 30, 2020",
     "rocketName": "Falcon 9",
-    "image": "/src/images/Crew_Dragon_Demo-2.jpeg",
+    "image": "/src/images/spacex/crew_dragon_demo_2.jpeg",
     "description": "The first crewed launch of Crew Dragon, carrying NASA astronauts Bob Behnken and Doug Hurley to the ISS. It marked the return of human spaceflight launches from American soil after nearly a decade.",
     "missionType": "Crewed Spaceflight"
   },
@@ -175,7 +175,7 @@
     "name": "Inspiration4",
     "date": "September 16, 2021",
     "rocketName": "Falcon 9",
-    "image": "/src/images/Inspiration4.jpeg",
+    "image": "/src/images/spacex/inspiration4.jpeg",
     "description": "The first orbital spaceflight crewed entirely by private citizens. A four-person crew spent three days circling the Earth aboard Crew Dragon while raising money for St. Jude Children's Research Hospital.",
     "missionType": "Crewed Commercial Mission"
   },
@@ -184,7 +184,7 @@
     "name": "DART (Double Asteroid Redirection Test)",
     "date": "November 24, 2021",
     "rocketName": "Falcon 9",
-    "image": "/src/images/DART_Double_Asteroid_Redirection_Test.png",
+    "image": "/src/images/spacex/dart_double_asteroid_redirection_test.jpeg",
     "description": "A NASA planetary defense mission that intentionally crashed a spacecraft into the asteroid moonlet Dimorphos, successfully demonstrating that a kinetic impactor can alter an asteroid's orbit.",
     "missionType": "Planetary Science"
   },
@@ -193,7 +193,7 @@
     "name": "IXPE (Imaging X-ray Polarimetry Explorer)",
     "date": "December 9, 2021",
     "rocketName": "Falcon 9",
-    "image": "/src/images/IXPE_Imaging_X-ray_Polarimetry_Explorer.jpeg",
+    "image": "/src/images/spacex/ixpe_imaging_x_ray_polarimetry_explorer.jpeg",
     "description": "Launch of a NASA space telescope designed to study X-rays from some of the most extreme objects in the universe, including black holes, neutron stars, and supernova remnants.",
     "missionType": "Space Telescope Launch"
   },
@@ -202,7 +202,7 @@
     "name": "Axiom Mission 1",
     "date": "April 8, 2022",
     "rocketName": "Falcon 9",
-    "image": "/src/images/Axiom_Mission_1.jpeg",
+    "image": "/src/images/spacex/axiom_mission_1.jpeg",
     "description": "The first fully private crewed mission to the International Space Station, carrying a commander and three paying crew members for roughly ten days of research and commercial activities in orbit.",
     "missionType": "Crewed Commercial Mission"
   },
@@ -211,7 +211,7 @@
     "name": "EchoStar 24 (Jupiter 3)",
     "date": "July 28, 2023",
     "rocketName": "Falcon Heavy",
-    "image": "/src/images/EchoStar_24_Jupiter_3.jpeg",
+    "image": "/src/images/spacex/echostar_24_jupiter_3.jpeg",
     "description": "Falcon Heavy delivered one of the largest commercial communications satellites ever built to geostationary orbit, boosting broadband capacity for EchoStar's Jupiter satellite fleet.",
     "missionType": "Commercial Satellite"
   },
@@ -220,7 +220,7 @@
     "name": "Euclid Space Telescope",
     "date": "July 1, 2023",
     "rocketName": "Falcon 9",
-    "image": "/src/images/Euclid.jpeg",
+    "image": "/src/images/spacex/euclid.jpeg",
     "description": "Launch of the European Space Agency's Euclid observatory, tasked with mapping billions of galaxies to investigate the nature of dark matter and dark energy across the universe.",
     "missionType": "Space Telescope Launch"
   },
@@ -229,7 +229,7 @@
     "name": "Psyche",
     "date": "October 13, 2023",
     "rocketName": "Falcon Heavy",
-    "image": "/src/images/Psyche.jpeg",
+    "image": "/src/images/spacex/psyche.jpeg",
     "description": "Falcon Heavy sent NASA's Psyche spacecraft on a journey to a metal-rich asteroid of the same name, offering scientists a rare look at what may be the exposed core of an early planetary building block.",
     "missionType": "Planetary Science"
   },
@@ -238,7 +238,7 @@
     "name": "IM-1 (Odysseus Lunar Lander)",
     "date": "February 15, 2024",
     "rocketName": "Falcon 9",
-    "image": "/src/images/IM-1_Odysseus_Lunar_Lander.jpeg",
+    "image": "/src/images/spacex/im_1_odysseus_lunar_lander.jpeg",
     "description": "Falcon 9 launched Intuitive Machines' Odysseus lander toward the Moon, which went on to become the first commercially built spacecraft to achieve a soft lunar landing and the first U.S. lunar touchdown since Apollo.",
     "missionType": "Commercial Lunar Mission"
   },
@@ -247,7 +247,7 @@
     "name": "Polaris Dawn",
     "date": "September 10, 2024",
     "rocketName": "Falcon 9",
-    "image": "/src/images/Polaris_Dawn.jpeg",
+    "image": "/src/images/spacex/polaris_dawn.jpeg",
     "description": "A privately funded Crew Dragon mission that flew farther from Earth than any human spaceflight since Apollo and included the first spacewalk performed by a commercial crew.",
     "missionType": "Crewed Commercial Mission"
   },
@@ -256,7 +256,7 @@
     "name": "Crew-9 Dragon Mission",
     "date": "September 28, 2024",
     "rocketName": "Falcon 9",
-    "image": "/src/images/Crew-9_Dragon_Mission.jpeg",
+    "image": "/src/images/spacex/crew_9_dragon_mission.jpeg",
     "description": "A NASA Commercial Crew rotation mission that flew astronauts to the International Space Station for a long-duration science expedition aboard Crew Dragon.",
     "missionType": "Crewed Spaceflight"
   },
@@ -265,7 +265,7 @@
     "name": "Starship Integrated Flight Test 5",
     "date": "October 13, 2024",
     "rocketName": "Starship",
-    "image": "/src/images/Starship_Integrated_Flight_Test_5.jpeg",
+    "image": "/src/images/spacex/starship_integrated_flight_test_5.jpeg",
     "description": "SpaceX achieved the first successful catch of a returning Super Heavy booster using the launch tower's mechanical arms, a major milestone toward rapid vehicle reuse.",
     "missionType": "Development Flight"
   },
@@ -274,7 +274,7 @@
     "name": "Starship Integrated Flight Test 6",
     "date": "November 19, 2024",
     "rocketName": "Starship",
-    "image": "/src/images/Starship_Integrated_Flight_Test_6.jpeg",
+    "image": "/src/images/spacex/starship_integrated_flight_test_6.jpeg",
     "description": "The sixth integrated flight test featured a relit Raptor engine demonstration in space and further refinements to Ship reentry and splashdown, though the booster was diverted to a controlled ocean landing.",
     "missionType": "Development Flight"
   }

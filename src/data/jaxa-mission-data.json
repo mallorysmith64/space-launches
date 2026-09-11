@@ -4,7 +4,7 @@
     "name": "SELENE (Kaguya)",
     "date": "September 14, 2007",
     "rocketName": "H-IIA",
-    "image": "/src/images/jaxa/selene-kaguya.jpg",
+    "image": "/src/images/jaxa/selene_kaguya.jpeg",
     "description": "Japan's largest lunar mission since the Apollo era, this orbiter spent nearly two years mapping the Moon's gravity field and surface topography before a planned impact in 2009.",
     "missionType": "Lunar Orbiter"
   },
@@ -13,7 +13,7 @@
     "name": "Akatsuki",
     "date": "May 20, 2010",
     "rocketName": "H-IIA",
-    "image": "/src/images/jaxa/akatsuki.jpg",
+    "image": "/src/images/jaxa/akatsuki.jpeg",
     "description": "A Venus climate orbiter built to study the planet's thick atmosphere and hunt for active volcanism, after an early engine failure delayed orbital insertion by five years.",
     "missionType": "Venus Climate Orbiter"
   },
@@ -22,7 +22,7 @@
     "name": "QZS-1 (Michibiki)",
     "date": "September 11, 2010",
     "rocketName": "H-IIA",
-    "image": "/src/images/jaxa/qzs1-michibiki.jpg",
+    "image": "/src/images/jaxa/qzs1_michibiki.jpeg",
     "description": "The first satellite in Japan's Quasi-Zenith Satellite System, designed to improve GPS accuracy over Japan and the Asia-Oceania region from a high-inclination orbit.",
     "missionType": "Navigation Satellite"
   },
@@ -31,7 +31,7 @@
     "name": "GPM Core Observatory",
     "date": "February 28, 2014",
     "rocketName": "H-IIA",
-    "image": "/src/images/jaxa/gpm-core-observatory.jpg",
+    "image": "/src/images/jaxa/gpm_core_observatory.jpeg",
     "description": "A joint JAXA-NASA satellite carrying advanced radar and microwave instruments to set a new standard for measuring rain and snowfall from space worldwide.",
     "missionType": "Earth Observation"
   },
@@ -40,7 +40,7 @@
     "name": "ALOS-2 (Daichi-2)",
     "date": "May 24, 2014",
     "rocketName": "H-IIA",
-    "image": "/src/images/jaxa/alos2-daichi2.jpg",
+    "image": "/src/images/jaxa/alos2_daichi2.jpeg",
     "description": "A radar Earth-observation satellite used for disaster monitoring, forest mapping, and infrastructure surveillance regardless of weather or daylight conditions.",
     "missionType": "Earth Observation"
   },
@@ -49,7 +49,7 @@
     "name": "HTV-1 (Kounotori)",
     "date": "September 11, 2009",
     "rocketName": "H-IIB",
-    "image": "/src/images/jaxa/htv1-kounotori.jpg",
+    "image": "/src/images/jaxa/htv1_kounotori.jpeg",
     "description": "The debut flight of Japan's H-II Transfer Vehicle, an uncrewed cargo craft that went on to resupply the International Space Station for over a decade.",
     "missionType": "ISS Resupply"
   },
@@ -58,7 +58,7 @@
     "name": "HTV-2 (Kounotori 2)",
     "date": "January 22, 2011",
     "rocketName": "H-IIB",
-    "image": "/src/images/jaxa/htv2-kounotori2.jpg",
+    "image": "/src/images/jaxa/htv2_kounotori2.jpeg",
     "description": "The second operational HTV cargo run, delivering food, spare parts, and science hardware to the International Space Station's Japanese Kibo module.",
     "missionType": "ISS Resupply"
   },
@@ -67,7 +67,7 @@
     "name": "HTV-3 (Kounotori 3)",
     "date": "July 21, 2012",
     "rocketName": "H-IIB",
-    "image": "/src/images/jaxa/htv3-kounotori3.jpg",
+    "image": "/src/images/jaxa/htv3_kounotori3.jpeg",
     "description": "The third Kounotori resupply mission, carrying pressurized and unpressurized cargo to the space station aboard JAXA's heavier-lift H-IIB rocket.",
     "missionType": "ISS Resupply"
   }
