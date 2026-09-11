@@ -31,7 +31,7 @@
           class="mission-gallery__global-button"
           @click="toggleAllDescriptions"
         >
-          {{ allExpanded ? 'Show less' : 'Show all' }}
+          {{ allExpanded ? 'Show less' : 'Show more' }}
         </button>
       </div>
 
@@ -62,9 +62,9 @@
             v-if="isTruncated(mission.id)"
             type="button"
             class="mission-card__desc-toggle"
-            @click="toggleDescription(mission.id)"
+            @click="toggleAllDescriptions"
           >
-            {{ isExpanded(mission.id) ? 'Show less' : 'Show more' }}
+            {{ allExpanded ? 'Show less' : 'Show more' }}
           </button>
         </div>
       </article>
