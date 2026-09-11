@@ -23,18 +23,6 @@
 
     <!-- Show missions grid -->
     <div v-if="filteredMissions.length > 0" class="mission-gallery__grid">
-      <!-- Global show all/show less toggle -->
-      <div class="mission-gallery__global-toggle">
-        <button
-          v-if="hasExpandableCards"
-          type="button"
-          class="mission-gallery__global-button"
-          @click="toggleAllDescriptions"
-        >
-          {{ allExpanded ? 'Show less' : 'Show more' }}
-        </button>
-      </div>
-
       <article v-for="mission in filteredMissions" :key="mission.id" class="mission-card">
         <div class="mission-card__image-wrapper">
           <img
@@ -409,36 +397,6 @@ watch(
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 20px;
-}
-
-.mission-gallery__global-toggle {
-  grid-column: 1 / -1;
-  display: flex;
-  justify-content: flex-start;
-  margin-bottom: 16px;
-}
-
-.mission-gallery__global-button {
-  padding: 8px 16px;
-  border: 1px solid var(--color-accent, #0ea5e9);
-  background: transparent;
-  color: var(--color-accent, #0ea5e9);
-  border-radius: var(--radius);
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  cursor: pointer;
-  transition:
-    background-color 0.2s ease,
-    color 0.2s ease;
-}
-
-.mission-gallery__global-button:hover,
-.mission-gallery__global-button:focus {
-  background-color: var(--color-accent, #0ea5e9);
-  color: white;
-  outline: none;
 }
 
 .mission-card {
