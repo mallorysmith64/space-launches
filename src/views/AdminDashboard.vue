@@ -1232,6 +1232,7 @@ onMounted(() => {
   margin-top: 20px;
   margin-left: 20px;
   margin-right: 20px;
+  padding-bottom: 60px;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 20px;
