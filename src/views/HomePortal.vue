@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import MissionGallery from '../components/MissionGallery.vue'
+import AppFooter from '../components/AppFooter.vue'
 </script>
 
 <template>
@@ -11,6 +12,8 @@ import MissionGallery from '../components/MissionGallery.vue'
   </section>
 
   <MissionGallery />
+
+  <AppFooter />
 </template>
 
 <style scoped>

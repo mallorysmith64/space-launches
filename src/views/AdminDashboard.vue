@@ -91,21 +91,7 @@
           <p class="mission-card__date">{{ mission.date }}</p>
           <p class="mission-card__rocket">{{ mission.rocketName }}</p>
           <p class="mission-card__type" v-if="mission.missionType">{{ mission.missionType }}</p>
-          <p
-            class="mission-card__desc"
-            :class="{ 'mission-card__desc--expanded': isExpanded(mission.id) }"
-            :ref="(el) => setDescRef(mission.id, el)"
-          >
-            {{ mission.description }}
-          </p>
-          <button
-            v-if="isTruncated(mission.id)"
-            type="button"
-            class="mission-card__desc-toggle"
-            @click="toggleAllDescriptions"
-          >
-            {{ allExpanded ? 'Show less' : 'Show more' }}
-          </button>
+          <p class="mission-card__desc">{{ mission.description }}</p>
         </div>
       </article>
     </div>
@@ -424,7 +410,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import spacexMissionsData from '../data/spacex-mission-data.json'
 import jaxaMissionsData from '../data/jaxa-mission-data.json'
 import { useRouter } from 'vue-router'
@@ -467,69 +453,6 @@ function companyLabel(company: Company): string {
   return COMPANY_LABELS[company]
 }
 
-// Description toggle functionality
-function setDescRef(missionId: string, el: unknown): void {
-  if (el instanceof HTMLElement) {
-    descEls.set(missionId, el)
-  } else {
-    descEls.delete(missionId)
-  }
-}
-
-function isTruncated(missionId: string): boolean {
-  return truncatedDescriptionIds.value.has(missionId)
-}
-
-function isExpanded(missionId: string): boolean {
-  return expandedDescriptionIds.value.has(missionId)
-}
-
-/**
- * Compares each description element's full content height (scrollHeight)
- * against its clamped visible height (clientHeight) to see if text is
- * actually being cut off.
- */
-function checkTruncatedDescriptions(): void {
-  const next = new Set(truncatedDescriptionIds.value)
-
-  descEls.forEach((el, missionId) => {
-    if (expandedDescriptionIds.value.has(missionId)) return
-
-    const isOverflowing = el.scrollHeight - el.clientHeight > 1
-    if (isOverflowing) {
-      next.add(missionId)
-    } else {
-      next.delete(missionId)
-    }
-  })
-
-  truncatedDescriptionIds.value = next
-}
-
-let resizeTimeout: ReturnType<typeof setTimeout> | undefined
-function onWindowResize(): void {
-  clearTimeout(resizeTimeout)
-  resizeTimeout = setTimeout(checkTruncatedDescriptions, 150)
-}
-
-/**
- * Expand or collapse all truncated descriptions at once.
- * Only affects cards that actually have truncated text.
- */
-function toggleAllDescriptions(): void {
-  const next = new Set(expandedDescriptionIds.value)
-
-  const truncatedIds = Array.from(truncatedDescriptionIds.value)
-
-  if (allExpanded.value) {
-    truncatedIds.forEach((id) => next.delete(id))
-  } else {
-    truncatedIds.forEach((id) => next.add(id))
-  }
-
-  expandedDescriptionIds.value = next
-}
-
 // API Base URL - point to Flask backend on port 5000
 const API_BASE_URL = 'http://localhost:5000'
 
@@ -538,23 +461,6 @@ const missions = ref<MissionWithCompany[]>([])
 const selectedCompany = ref<'all' | Company>('all')
 const selectedRocket = ref<'all' | string>('all')
 const isLoading = ref(false)
-
-// Tracks which mission cards have their full description expanded
-const expandedDescriptionIds = ref<Set<string>>(new Set())
-
-// Tracks which descriptions are actually clipped by the 3-line clamp
-const truncatedDescriptionIds = ref<Set<string>>(new Set())
-const descEls = new Map<string, HTMLElement>()
-
-/**
- * Computed property to determine if all truncated cards are currently expanded
- */
-const allExpanded = computed(() => {
-  if (truncatedDescriptionIds.value.size === 0) return false
-  return Array.from(truncatedDescriptionIds.value).every((id) =>
-    expandedDescriptionIds.value.has(id),
-  )
-})
 
 const rocketOptions = computed(() => {
   const missionsForCompany =
@@ -1178,23 +1084,7 @@ async function handleLogout(): Promise<void> {
  */
 onMounted(() => {
   missions.value = loadMissions()
-  window.addEventListener('resize', onWindowResize)
 })
-
-onUnmounted(() => {
-  window.removeEventListener('resize', onWindowResize)
-  clearTimeout(resizeTimeout)
-})
-
-// Re-measure truncation when filtered missions change
-watch(
-  filteredMissions,
-  () => {
-    expandedDescriptionIds.value = new Set()
-    nextTick(checkTruncatedDescriptions)
-  },
-  { flush: 'post' },
-)
 </script>
 
 <style scoped>
@@ -1496,33 +1386,6 @@ watch(
   -webkit-box-orient: vertical;
   overflow: hidden;
   flex: 1;
-}
-
-.mission-card__desc--expanded {
-  display: block;
-  -webkit-line-clamp: unset;
-  overflow: visible;
-  flex: none;
-}
-
-.mission-card__desc-toggle {
-  align-self: flex-start;
-  margin-top: 6px;
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--color-accent, #0ea5e9);
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  cursor: pointer;
-}
-
-.mission-card__desc-toggle:hover,
-.mission-card__desc-toggle:focus {
-  text-decoration: underline;
-  outline: none;
 }
 
 /* Modal Styles */
