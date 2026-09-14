@@ -48,8 +48,10 @@ COPY backend/ ./backend/
 # Copy built frontend from previous stage
 COPY --from=frontend-build /app/dist ./frontend/dist
 
-# Create necessary directories for uploads and data (will be mounted as volumes at runtime)
-RUN mkdir -p src/images src/data
+# Copy static images and data (baked into the image so they're present
+# even without the local volume mount used in podman-compose/dev)
+COPY src/images ./src/images
+COPY src/data ./src/data
 
 # Expose port
 EXPOSE 5000
