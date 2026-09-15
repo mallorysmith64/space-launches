@@ -1,5 +1,5 @@
 # Stage 1: Build Vue.js frontend
-FROM node:22.18.0 AS frontend-build
+FROM node:22.22.2 AS frontend-build
 
 WORKDIR /app
 
