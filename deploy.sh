@@ -32,6 +32,16 @@ gcloud builds submit \
 
 echo "==> Build complete"
 
+# Verify required secrets exist before deploying, so a missing secret fails
+# fast here instead of crashing the container after deploy.
+for secret in SECRET_KEY ADMIN_PASSWORD_HASH; do
+  if ! gcloud secrets describe "${secret}" >/dev/null 2>&1; then
+    echo "ERROR: Secret '${secret}' does not exist. Create it first, e.g.:"
+    echo "  printf '%s' 'your-value' | gcloud secrets create ${secret} --data-file=-"
+    exit 1
+  fi
+done
+
 # Deploy
 echo "==> Deploying to Cloud Run"
 gcloud run deploy "${SERVICE_NAME}" \
@@ -41,7 +51,8 @@ gcloud run deploy "${SERVICE_NAME}" \
   --allow-unauthenticated \
   --memory=1Gi \
   --timeout=300 \
-  --set-env-vars="SECRET_KEY=$(python3 -c 'import secrets; print(secrets.token_hex(32))')"
+  --set-env-vars="ADMIN_USERNAME=admin" \
+  --set-secrets="SECRET_KEY=SECRET_KEY:latest,ADMIN_PASSWORD_HASH=ADMIN_PASSWORD_HASH:latest"
 
 echo "==> ✓ Deployment complete!"
 echo ""
