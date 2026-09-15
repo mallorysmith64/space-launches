@@ -3,24 +3,38 @@ FROM node:22-alpine AS frontend-build
 
 WORKDIR /app
 
-# Set npm timeouts and disable optional dependencies to speed up install
-RUN npm config set fetch-timeout 120000 && \
-    npm config set fetch-retries 5 && \
-    npm config set fetch-retry-mintimeout 20000 && \
-    npm config set fetch-retry-maxtimeout 120000
+# Skip Playwright browser downloads (not needed for build)
+# This prevents hanging on @playwright/test during npm ci
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+
+# npm configuration for reliability in constrained environments
+ENV npm_config_fetch_timeout=600000 \
+    npm_config_fetch_retries=10 \
+    npm_config_fetch_retry_mintimeout=30000 \
+    npm_config_fetch_retry_maxtimeout=120000 \
+    npm_config_registry=https://registry.npmjs.org/
+
+# Clear npm cache
+RUN npm cache clean --force
 
 # Copy package files
 COPY package.json package-lock.json ./
 
-# Use npm ci instead of npm install (deterministic, better for CI/CD)
-# Remove --ignore-engines; if there's a conflict, it should be fixed in package.json
-ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
-RUN npm ci --prefer-offline --no-audit
+# Install dependencies
+# --no-optional: Skip optional deps that slow things down
+# --prefer-offline: Use cache if available
+# --maxsockets 8: Parallel downloads
+RUN npm ci \
+    --prefer-offline \
+    --no-optional \
+    --no-audit \
+    --loglevel warn \
+    --maxsockets 8
 
 # Copy source code
 COPY src/ ./src/
 
-# Copy individual config files
+# Copy config files
 COPY index.html .
 COPY vite.config.ts .
 COPY vitest.config.ts .
@@ -31,7 +45,10 @@ COPY tsconfig.vitest.json .
 COPY env.d.ts .
 
 # Build frontend
-RUN npm run build && npm cache clean --force
+RUN npm run build
+
+# Clean up cache
+RUN npm cache clean --force && rm -rf node_modules/.cache
 
 # Stage 2: Runtime with Flask backend and frontend
 FROM python:3.12-slim
@@ -70,10 +87,9 @@ COPY src/data ./src/data
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 USER appuser
 
-# Health check (Cloud Run will handle this, but good for local testing)
+# Health check for local testing
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:${PORT}/ || exit 1
 
 # Run Flask with Gunicorn
-# Cloud Run requires the app to listen on 0.0.0.0:$PORT
 CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT} --workers ${GUNICORN_WORKERS} --threads 2 --timeout 120 --access-logfile - --error-logfile - --log-level info backend.app:app"]
