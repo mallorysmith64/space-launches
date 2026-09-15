@@ -14,6 +14,7 @@ COPY package.json package-lock.json ./
 
 # Use npm ci instead of npm install (deterministic, better for CI/CD)
 # Remove --ignore-engines; if there's a conflict, it should be fixed in package.json
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 RUN npm ci --prefer-offline --no-audit
 
 # Copy source code
