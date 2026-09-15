@@ -4,6 +4,10 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
+// API Base URL - relative (same origin) in production; VITE_API_URL or localhost:5000 in dev
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000' : '')
+
 const username = ref('')
 const password = ref('')
 const isLoading = ref(false)
@@ -19,7 +23,7 @@ async function handleLogin() {
   error.value = ''
 
   try {
-    const response = await fetch('http://localhost:5000/api/admin/login', {
+    const response = await fetch(`${API_BASE_URL}/api/admin/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

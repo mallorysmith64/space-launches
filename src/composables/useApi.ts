@@ -1,7 +1,9 @@
 // src/composables/useApi.ts
 import { ref } from 'vue'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+// In production, use relative URLs (same domain)
+// In development, check for VITE_API_URL env var, otherwise use localhost:5000
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000' : '')
 
 export function useApi() {
   const data = ref<unknown>(null)
@@ -15,6 +17,7 @@ export function useApi() {
     try {
       const response = await fetch(`${API_URL}${endpoint}`, {
         ...options,
+        credentials: 'include', // Include cookies for sessions
         headers: {
           'Content-Type': 'application/json',
           ...options.headers,

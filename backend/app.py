@@ -1,17 +1,33 @@
 import os
 import uuid
-from flask import Flask, jsonify, request, session, redirect, url_for, send_from_directory
+from flask import Flask, jsonify, request, session, send_from_directory, send_file
 from flask_cors import CORS
 from functools import wraps
 from werkzeug.utils import secure_filename
 import json
 from datetime import datetime
 
-app = Flask(__name__)
+# Determine the static folder path (works both locally and in Docker)
+# app.py is in backend/, so go up one level to project root, then into dist/
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # backend/
+PROJECT_ROOT = os.path.dirname(BASE_DIR)  # project root
+STATIC_FOLDER = os.path.join(PROJECT_ROOT, 'dist')
+
+# Create Flask app WITHOUT Flask's automatic static route.
+# static_folder=None disables Flask's built-in `/<path:filename>` static handler,
+# which otherwise conflicts with our own catch-all SPA route below (serve_frontend)
+# and swallows requests like /admin before they ever reach it.
+app = Flask(__name__, static_folder=None)
 app.secret_key = os.environ.get('SECRET_KEY', 'bdbc4c500ee264f5827337392f2dbc67dc639949186f13fb49c3145ed2a6c931')
 
+print(f"[DEBUG] BASE_DIR: {BASE_DIR}")
+print(f"[DEBUG] STATIC_FOLDER: {STATIC_FOLDER}")
+print(f"[DEBUG] Static folder exists: {os.path.exists(STATIC_FOLDER)}")
+if os.path.exists(STATIC_FOLDER):
+    print(f"[DEBUG] Static folder contents: {os.listdir(STATIC_FOLDER)[:5]}")
+
 # Configure upload folder and allowed file types
-UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), '..', 'src', 'images')
+UPLOAD_FOLDER = os.path.join(PROJECT_ROOT, 'src', 'images')
 ALLOWED_EXTENSIONS = {'jpeg', 'jpg'}
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB in bytes
 
@@ -21,20 +37,21 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE
 
-# Enable CORS - updated for Docker environments
+# Enable CORS - updated for production
 CORS(
     app,
-    resources={r"/api/admin*": {"origins": [
+    resources={r"/api/*": {"origins": [
         "http://localhost:5173",      # Vite dev server
         "http://localhost:5000",      # Flask dev
         "http://localhost:3000",      # Alternative port
         "http://127.0.0.1:5173",
         "http://127.0.0.1:5000",
         "http://127.0.0.1:3000",
+        os.environ.get('FRONTEND_URL', ''),  # Production frontend URL
     ]}},
     supports_credentials=True,
     allow_headers=['Content-Type', 'Authorization'],
-    methods=['GET', 'POST', 'OPTIONS']
+    methods=['GET', 'POST', 'OPTIONS', 'PUT', 'DELETE']
 )
 
 # Authentication decorator
@@ -72,7 +89,7 @@ def delete_old_image(mission_title):
 
 def get_json_path():
     """Get the path to the mission data JSON file"""
-    return os.path.join(os.path.dirname(__file__), '..', 'src', 'data', 'spacex-mission-data.json')
+    return os.path.join(PROJECT_ROOT, 'src', 'data', 'spacex-mission-data.json')
 
 def update_mission_json(mission_id, new_image_path=None, new_title=None, new_description=None, new_date=None, new_rocket_type=None, new_mission_type=None):
     """
@@ -129,14 +146,7 @@ def update_mission_json(mission_id, new_image_path=None, new_title=None, new_des
         print(f"Error updating mission JSON: {e}")
         return False
 
-@app.route("/")
-def hello_world():
-    return jsonify({'message': 'Hello, World!'})
-
-@app.route('/static/images/<filename>')
-def serve_image(filename):
-    """Serve images from the upload folder"""
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+# ==================== API Routes ====================
 
 @app.route("/api/admin/login", methods=["GET", "POST"])
 def admin_login():
@@ -435,6 +445,50 @@ def admin_status():
     if session.get('admin_logged_in'):
         return jsonify({'status': 'authenticated', 'message': 'User is logged in'}), 200
     return jsonify({'status': 'unauthenticated', 'message': 'User is not logged in'}), 401
+
+@app.route('/static/images/<filename>')
+def serve_image(filename):
+    """Serve images from the upload folder"""
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+# ==================== Frontend Routes (SPA) ====================
+
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve_frontend(path):
+    """
+    Serve Vue.js frontend files and handle SPA routing.
+    All non-API routes are served index.html so Vue Router can handle them.
+    """
+    # If it's an API route, don't handle it here
+    if path.startswith('api/'):
+        return jsonify({'status': 'error', 'message': 'Endpoint not found'}), 404
+    
+    # Try to serve the file if it exists in the static folder
+    file_path = os.path.join(STATIC_FOLDER, path)
+    if os.path.exists(file_path) and os.path.isfile(file_path):
+        return send_from_directory(STATIC_FOLDER, path)
+    
+    # Otherwise, serve index.html (Vue Router will handle the route)
+    index_path = os.path.join(STATIC_FOLDER, 'index.html')
+    if os.path.exists(index_path):
+        return send_from_directory(STATIC_FOLDER, 'index.html')
+    
+    # Debug: Frontend not found
+    print(f"[ERROR] Frontend not found")
+    print(f"[DEBUG] Static folder: {STATIC_FOLDER}")
+    print(f"[DEBUG] Static folder exists: {os.path.exists(STATIC_FOLDER)}")
+    if os.path.exists(STATIC_FOLDER):
+        print(f"[DEBUG] Contents: {os.listdir(STATIC_FOLDER)}")
+    
+    return jsonify({
+        'status': 'error', 
+        'message': 'Frontend not found',
+        'debug': {
+            'static_folder': STATIC_FOLDER,
+            'exists': os.path.exists(STATIC_FOLDER)
+        }
+    }), 404
 
 # Error handlers
 @app.errorhandler(404)

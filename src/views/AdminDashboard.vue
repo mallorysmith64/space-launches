@@ -467,8 +467,9 @@ function companyLabel(company: Company): string {
   return COMPANY_LABELS[company]
 }
 
-// API Base URL - point to Flask backend on port 5000
-const API_BASE_URL = 'http://localhost:5000'
+// API Base URL - relative (same origin) in production; VITE_API_URL or localhost:5000 in dev
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000' : '')
 
 const router = useRouter()
 const missions = ref<MissionWithCompany[]>([])
@@ -936,8 +937,7 @@ async function saveNewMission(): Promise<void> {
   } catch (err) {
     console.error('Create mission error:', err)
     if (err instanceof TypeError) {
-      newSaveError.value =
-        'Network error: Cannot connect to server. Make sure the backend is running on http://localhost:5000'
+      newSaveError.value = 'Network error: Cannot connect to the server. Please try again.'
     } else {
       newSaveError.value =
         err instanceof Error ? err.message : 'An error occurred while creating the mission'
@@ -995,8 +995,7 @@ async function confirmDeleteMission(): Promise<void> {
   } catch (err) {
     console.error('Delete mission error:', err)
     if (err instanceof TypeError) {
-      deleteError.value =
-        'Network error: Cannot connect to server. Make sure the backend is running on http://localhost:5000'
+      deleteError.value = 'Network error: Cannot connect to the server. Please try again.'
     } else {
       deleteError.value =
         err instanceof Error ? err.message : 'An error occurred while deleting the mission'
@@ -1167,8 +1166,7 @@ async function saveImage(): Promise<void> {
   } catch (err) {
     console.error('Upload error details:', err)
     if (err instanceof TypeError) {
-      uploadError.value =
-        'Network error: Cannot connect to server. Make sure the backend is running on http://localhost:5000'
+      uploadError.value = 'Network error: Cannot connect to the server. Please try again.'
     } else {
       uploadError.value = err instanceof Error ? err.message : 'An error occurred during upload'
     }

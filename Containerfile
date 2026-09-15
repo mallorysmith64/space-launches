@@ -9,8 +9,8 @@ ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 # Copy package files
 COPY package.json package-lock.json ./
 
-# Install dependencies
-RUN npm ci --omit=optional --prefer-offline --no-audit
+# Install dependencies (include optional deps for Rolldown native bindings)
+RUN npm ci --prefer-offline --no-audit
 
 # Copy source code and config
 COPY src/ ./src/
@@ -46,7 +46,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application
 COPY backend/ ./backend/
-COPY --from=frontend-build /app/dist ./frontend/dist
+
+# Copy compiled frontend from build stage
+COPY --from=frontend-build /app/dist ./dist
+
+# Copy image and data directories
 COPY src/images ./src/images
 COPY src/data ./src/data
 

@@ -1,63 +1,49 @@
 #!/usr/bin/env bash
-# Build, push, and deploy space-launches to Cloud Run via Artifact Registry (podman).
+# Deploy space-launches to Cloud Run
 set -euo pipefail
 
-# ---- Config ----
 PROJECT_ID="space-launches-app"
 REGION="us-central1"
 REPO="space-launches-repo"
 IMAGE_NAME="space-launches"
 SERVICE_NAME="space-launches"
-SERVICE_ACCOUNT="space-launches-sa@${PROJECT_ID}.iam.gserviceaccount.com"
-PORT="5000"
+IMAGE_URI="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO}/${IMAGE_NAME}:latest"
 
-# Tag with today's date, e.g. 9-14-2026 (no leading zeros, matches your convention)
-TAG="$(date +%-m-%-d-%Y)"
-IMAGE_URI="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO}/${IMAGE_NAME}:${TAG}"
+echo "==> Deploying to Cloud Run"
 
-echo "==> Deploying ${IMAGE_URI}"
+# Setup
+echo "==> Setting up GCP project"
+gcloud config set project "${PROJECT_ID}"
+gcloud services enable artifactregistry.googleapis.com run.googleapis.com cloudbuild.googleapis.com
 
-# ---- One-time setup (safe to re-run; commands are idempotent/no-ops if already done) ----
-echo "==> Setting project"
-gcloud config set project "${PROJECT_ID}" >/dev/null
-
-echo "==> Ensuring required APIs are enabled"
-gcloud services enable artifactregistry.googleapis.com run.googleapis.com iam.googleapis.com
-
-echo "==> Ensuring Artifact Registry repo exists"
+# Create repo if needed
 if ! gcloud artifacts repositories describe "${REPO}" --location="${REGION}" >/dev/null 2>&1; then
+  echo "==> Creating Artifact Registry repository"
   gcloud artifacts repositories create "${REPO}" \
     --repository-format=docker \
-    --location="${REGION}" \
-    --description="space-launches images"
+    --location="${REGION}"
 fi
 
-echo "==> Ensuring runtime service account exists"
-if ! gcloud iam service-accounts describe "${SERVICE_ACCOUNT}" >/dev/null 2>&1; then
-  gcloud iam service-accounts create "${IMAGE_NAME}-sa" \
-    --display-name="space-launches runtime"
-fi
+# Build
+echo "==> Building image with Cloud Build"
+gcloud builds submit \
+  --config=cloudbuild.yaml \
+  --timeout=1800s
 
-# ---- Auth podman to Artifact Registry ----
-echo "==> Authenticating podman to Artifact Registry"
-gcloud auth print-access-token | podman login -u oauth2accesstoken --password-stdin "https://${REGION}-docker.pkg.dev"
+echo "==> Build complete"
 
-# ---- Build ----
-echo "==> Building image"
-podman build --platform=linux/amd64 -t "${IMAGE_URI}" .
-
-# ---- Push ----
-echo "==> Pushing image"
-podman push "${IMAGE_URI}"
-
-# ---- Deploy ----
+# Deploy
 echo "==> Deploying to Cloud Run"
 gcloud run deploy "${SERVICE_NAME}" \
   --image="${IMAGE_URI}" \
   --region="${REGION}" \
-  --service-account="${SERVICE_ACCOUNT}" \
-  --port="${PORT}" \
-  --allow-unauthenticated
+  --port=5000 \
+  --allow-unauthenticated \
+  --memory=1Gi \
+  --timeout=300 \
+  --set-env-vars="SECRET_KEY=$(python3 -c 'import secrets; print(secrets.token_hex(32))')"
 
-echo "==> Done. Service URL:"
+echo "==> ✓ Deployment complete!"
+echo ""
+echo "==> Service URL:"
 gcloud run services describe "${SERVICE_NAME}" --region="${REGION}" --format="value(status.url)"

@@ -71,6 +71,10 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
+// API Base URL - relative (same origin) in production; VITE_API_URL or localhost:5000 in dev
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000' : '')
+
 const username = ref('')
 const password = ref('')
 const loading = ref(false)
@@ -87,7 +91,7 @@ const serverStatusClass = computed(() => {
 // Check if Flask server is running on startup
 async function checkServerStatus() {
   try {
-    const response = await fetch('http://localhost:5000/api/admin/status', {
+    const response = await fetch(`${API_BASE_URL}/api/admin/status`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -117,7 +121,7 @@ async function handleLogin() {
       password: password.value,
     }
 
-    const response = await fetch('http://localhost:5000/api/admin/login', {
+    const response = await fetch(`${API_BASE_URL}/api/admin/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -150,8 +154,7 @@ async function handleLogin() {
 
     // Provide specific error messages
     if (err.message.includes('Failed to fetch')) {
-      error.value =
-        "Cannot connect to Flask server. Make sure it's running on http://localhost:5000"
+      error.value = 'Cannot connect to the server. Please try again.'
       serverStatus.value = 'offline'
     } else if (err instanceof TypeError) {
       error.value = `Network error: ${err.message}`
