@@ -1,11 +1,17 @@
 import os
 import uuid
+from dotenv import load_dotenv
 from flask import Flask, jsonify, request, session, send_from_directory, send_file
 from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from functools import wraps
 from werkzeug.utils import secure_filename
+from werkzeug.security import check_password_hash
 import json
 from datetime import datetime
+
+load_dotenv()
 
 # Determine the static folder path (works both locally and in Docker)
 # app.py is in backend/, so go up one level to project root, then into dist/
@@ -18,7 +24,22 @@ STATIC_FOLDER = os.path.join(PROJECT_ROOT, 'dist')
 # which otherwise conflicts with our own catch-all SPA route below (serve_frontend)
 # and swallows requests like /admin before they ever reach it.
 app = Flask(__name__, static_folder=None)
-app.secret_key = os.environ.get('SECRET_KEY', 'bdbc4c500ee264f5827337392f2dbc67dc639949186f13fb49c3145ed2a6c931')
+
+# Fail fast if SECRET_KEY isn't set, rather than silently falling back to a
+# hardcoded value that anyone reading the source code could use to forge sessions.
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    raise RuntimeError('SECRET_KEY environment variable is not set. Add it to your .env file.')
+app.secret_key = SECRET_KEY
+
+# Admin credentials: username is a plain env var, password is stored only as a hash.
+# Generate the hash with: python -c "from werkzeug.security import generate_password_hash; print(generate_password_hash('yourpassword'))"
+ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
+ADMIN_PASSWORD_HASH = os.environ.get('ADMIN_PASSWORD_HASH')
+if not ADMIN_PASSWORD_HASH:
+    raise RuntimeError('ADMIN_PASSWORD_HASH environment variable is not set. See the comment above for how to generate one.')
+
+limiter = Limiter(app=app, key_func=get_remote_address, default_limits=[])
 
 print(f"[DEBUG] BASE_DIR: {BASE_DIR}")
 print(f"[DEBUG] STATIC_FOLDER: {STATIC_FOLDER}")
@@ -149,6 +170,7 @@ def update_mission_json(mission_id, new_image_path=None, new_title=None, new_des
 # ==================== API Routes ====================
 
 @app.route("/api/admin/login", methods=["GET", "POST"])
+@limiter.limit("5 per minute")
 def admin_login():
     """Admin login endpoint"""
     if request.method == "POST":
@@ -159,8 +181,13 @@ def admin_login():
         else:
             username = request.form.get('username', '').strip()
             password = request.form.get('password', '').strip()
-        
-        if username == 'admin' and password == 'password':
+
+        # Constant-shape check: always run check_password_hash so that
+        # bad usernames don't return faster than bad passwords (timing).
+        valid_username = username == ADMIN_USERNAME
+        valid_password = check_password_hash(ADMIN_PASSWORD_HASH, password)
+
+        if valid_username and valid_password:
             session['admin_logged_in'] = True
             session.permanent = True
             
